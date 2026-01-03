@@ -6,28 +6,148 @@
   <title>Login - TechWear Hub</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* --- PREMIUM LOGIN STYLES --- */
+
+    /* 1. Background Styling */
+    body > main {
+      /* Full height background with a tech-themed image */
+      background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      min-height: 90vh; /* Takes up most of the screen */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    /* 2. The Login Card */
+    .login-card {
+      background-color: var(--background-color);
+      width: 100%;
+      max-width: 480px; /* Limits width so it looks elegant */
+      padding: 3rem;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4); /* Deep shadow for 3D effect */
+      animation: fadeIn 0.6s ease-out;
+    }
+
+    /* 3. Typography */
+    .login-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .login-header h2 {
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+    .login-header p {
+      color: var(--muted-color);
+      font-size: 0.9rem;
+    }
+
+    /* 4. Form Elements */
+    input {
+      border-radius: 6px !important;
+      height: 3rem; /* Taller inputs feel more premium */
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 1rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      border-radius: 6px;
+    }
+
+    /* 5. Footer Links */
+    .form-footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--muted-color);
+    }
+    .form-footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-  <nav class="container-fluid">
-    <ul><li><strong>TechWear Hub</strong></li></ul>
+
+  <nav class="container-fluid" style="position: absolute; top: 0; width: 100%; z-index: 10;">
+    <ul><li><strong style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">TechWear Hub</strong></li></ul>
     <ul id="navLinks">
-      <li><a href="index.html">Home</a></li>
-      <li><a href="shop.html">Shop</a></li>
-      <li><a href="login.html" id="loginLink">Login</a></li>
-      <li><a href="cart.html">Cart</a></li>
-      <li><a href="admin.html">Admin</a></li>
+      <li><a href="index.html" style="color: white;">Home</a></li>
+      <li><a href="shop.html" style="color: white;">Shop</a></li>
+      <li><a href="login.html" role="button" class="outline contrast">Login</a></li>
+      <li><a href="cart.html" style="color: white;">Cart</a></li>
+      <li><a href="admin.html" style="color: white;">Admin</a></li>
     </ul>
   </nav>
 
-  <main class="container">
-    <h2>Login</h2>
-    <form onsubmit="userLogin(event)">
-      <input type="text" id="username" placeholder="Enter username" required />
-      <input type="password" id="password" placeholder="Enter password" required />
-      <button type="submit">Login</button>
-    </form>
+  <main>
+    <div class="login-card">
+      <div class="login-header">
+        <h2>Welcome Back</h2>
+        <p>Sign in to manage your orders and account.</p>
+      </div>
+
+      <form onsubmit="userLogin(event)">
+        <label for="username">Username / Email</label>
+        <input type="text" id="username" placeholder="john.doe@example.com" required />
+        
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="••••••••" required />
+        
+        <div class="grid" style="font-size: 0.8rem; margin-bottom: 1rem; align-items: center;">
+            <label>
+                <input type="checkbox"> Remember me
+            </label>
+            <a href="#" style="text-align: right; color: var(--muted-color);">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="contrast">Sign In</button>
+      </form>
+
+      <div class="form-footer">
+        Don't have an account? <a href="#">Create Account</a>
+      </div>
+    </div>
   </main>
 
   <script src="js/main.js"></script>
+  
+  <script>
+    // Simple Mock Login Logic
+    function userLogin(event) {
+        event.preventDefault(); // Stop page refresh
+        const user = document.getElementById('username').value;
+        const pass = document.getElementById('password').value;
+
+        // Simple validation simulation
+        if(user && pass) {
+            // Save login state
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('username', user);
+            
+            // Visual feedback
+            const btn = event.target.querySelector('button');
+            btn.setAttribute('aria-busy', 'true'); // Loading spinner
+            btn.textContent = 'Authenticating...';
+
+            setTimeout(() => {
+                window.location.href = 'index.html'; // Redirect to home
+            }, 1500);
+        }
+    }
+  </script>
 </body>
 </html>
