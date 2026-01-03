@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>My Profile - TechWear Hub</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Profile Card Styling */
+    .profile-header {
+        background-image: linear-gradient(to right, #2c3e50, #4ca1af);
+        color: white;
+        padding: 3rem 2rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+    .avatar {
+        width: 100px;
+        height: 100px;
+        background: white;
+        border-radius: 50%;
+        margin: 0 auto 1rem auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #333;
+        font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="container-fluid">
+    <ul><li><strong>TechWear Hub</strong></li></ul>
+    <ul id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="profile.html" id="loginLink" role="button" class="outline">Profile</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    
+    <div class="profile-header">
+        <div class="avatar" id="userAvatar">U</div>
+        <h2 id="welcomeMsg">Welcome back!</h2>
+        <p>Member since 2026</p>
+    </div>
+
+    <div class="grid">
+        <article>
+            <header><strong>Account Details</strong></header>
+            <p><strong>Username:</strong> <span id="displayUser">Loading...</span></p>
+            <p><strong>Email:</strong> user@example.com (Mock)</p>
+            <p><strong>Status:</strong> <span style="color: green">Active</span></p>
+        </article>
+
+        <article>
+            <header><strong>Recent Orders</strong></header>
+            <ul>
+                <li>Order #1024 - Smartwatch Pro (Delivered)</li>
+                <li>Order #1021 - Fitness Tracker (Shipped)</li>
+            </ul>
+        </article>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem;">
+        <button class="secondary outline" onclick="userLogout()" style="width: 200px;">Logout</button>
+    </div>
+
+  </main>
+
+  <script src="js/main.js"></script>
+  
+  <script>
+    // Specific script just for Profile page to show username
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = localStorage.getItem('currentUser');
+        if(user) {
+            document.getElementById('welcomeMsg').innerText = `Welcome, ${user}!`;
+            document.getElementById('displayUser').innerText = user;
+            document.getElementById('userAvatar').innerText = user.charAt(0).toUpperCase();
+        } else {
+            // If not logged in, go back to login
+            window.location.href = 'login.html';
+        }
+    });
+  </script>
+</body>
+</html>
