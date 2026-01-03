@@ -1,76 +1,69 @@
-// ======== LOCAL STORAGE CART SYSTEM ========
+// js/main.js
 
-function getCart() {
-  return JSON.parse(localStorage.getItem("cartItems")) || [];
+// --- 1. CART SYSTEM ---
+
+function addToCart(productName, price) {
+    // Get existing cart or create empty one
+    let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+    
+    // Add new item
+    let product = {
+        name: productName,
+        price: price,
+        id: Date.now() // Unique ID
+    };
+    
+    cart.push(product);
+    
+    // Save back to browser storage
+    localStorage.setItem('techWearCart', JSON.stringify(cart));
+    
+    // Visual feedback
+    alert(productName + " added to your cart!");
 }
 
-function saveCart(cart) {
-  localStorage.setItem("cartItems", JSON.stringify(cart));
+// --- 2. LOGIN SYSTEM ---
+
+function userLogin(event) {
+    event.preventDefault(); // Stop page from reloading
+    
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    
+    if (usernameInput.value) {
+        // Save user to storage
+        localStorage.setItem('currentUser', usernameInput.value);
+        
+        // Redirect to the new Profile page
+        window.location.href = 'profile.html'; 
+    } else {
+        alert("Please enter a username");
+    }
 }
 
-function addToCart(item) {
-  let cart = getCart();
-  cart.push(item);
-  saveCart(cart);
-  alert(`${item} added to cart!`);
+function userLogout() {
+    // Clear user data
+    localStorage.removeItem('currentUser');
+    // Redirect to home
+    window.location.href = 'index.html';
 }
 
-function renderCart() {
-  const cartList = document.getElementById("cartList");
-  if (!cartList) return;
-  const cart = getCart();
-  cartList.innerHTML = "";
-  if (cart.length === 0) {
-    cartList.innerHTML = "<li>Your cart is empty.</li>";
-  } else {
-    cart.forEach((item, i) => {
-      const li = document.createElement("li");
-      li.textContent = item + " ";
-      const btn = document.createElement("button");
-      btn.textContent = "Remove";
-      btn.onclick = () => removeFromCart(i);
-      li.appendChild(btn);
-      cartList.appendChild(li);
-    });
-  }
-}
+// --- 3. NAVIGATION MANAGER (Runs on every page load) ---
 
-function removeFromCart(index) {
-  let cart = getCart();
-  cart.splice(index, 1);
-  saveCart(cart);
-  renderCart();
-}
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // A. Check if user is logged in
+    const currentUser = localStorage.getItem('currentUser');
+    const loginLink = document.getElementById('loginLink');
 
-function checkout() {
-  let cart = getCart();
-  if (cart.length === 0) return alert("Your cart is empty!");
-  alert("Checkout successful for: " + cart.join(", "));
-  localStorage.removeItem("cartItems");
-  renderCart();
-}
+    if (currentUser && loginLink) {
+        // User IS logged in: Change "Login" button to "Profile"
+        loginLink.textContent = 'Profile';
+        loginLink.href = 'profile.html';
+    }
 
-// ======== LOGIN SYSTEM ========
-
-function userLogin(e) {
-  e.preventDefault();
-  const username = document.getElementById("username").value;
-  const password = document.getElementById("password").value;
-  if (username && password) {
-    localStorage.setItem("loggedUser", username);
-    alert("Welcome, " + username + "!");
-    window.location.href = "index.html";
-  }
-}
-
-function updateNavbar() {
-  const loginLink = document.getElementById("loginLink");
-  if (!loginLink) return;
-  const user = localStorage.getItem("loggedUser");
-  if (user) loginLink.textContent = "Welcome, " + user;
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  updateNavbar();
-  renderCart();
+    // B. If we are on the Login page but already logged in, kick user to Profile
+    if (window.location.pathname.includes('login.html') && currentUser) {
+        window.location.href = 'profile.html';
+    }
 });
