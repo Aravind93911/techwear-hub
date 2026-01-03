@@ -1,34 +1,8 @@
-body {
-  background-color: #f9f9f9;
-}
-
-nav strong {
-  color: #0066cc;
-}
-
-.product img {
+body { background: #fafafa; }
+nav strong { color: #0070f3; }
+.product img, article img {
   border-radius: 10px;
-}
-
-.admin-log {
-  background: #fff;
-  padding: 1rem;
-  border-radius: 10px;
-  margin-bottom: 1rem;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.log-table {
   width: 100%;
-  border-collapse: collapse;
+  height: auto;
 }
-
-.log-table th,
-.log-table td {
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-}
-
-.log-table th {
-  background: #f0f0f0;
-}
+ul#cartList li { padding: 0.5rem 0; border-bottom: 1px solid #ddd; }
