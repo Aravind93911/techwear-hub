@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shop - TechWear Hub</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <nav class="container-fluid">
+    <ul><li><strong>TechWear Hub</strong></li></ul>
+    <ul id="navLinks">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="shop.html">Shop</a></li>
+      <li><a href="login.html" id="loginLink">Login</a></li>
+      <li><a href="cart.html">Cart</a></li>
+      <li><a href="admin.html">Admin</a></li>
+    </ul>
+  </nav>
+
+  <main class="container">
+    <h2>Shop Our Smart Wearables</h2>
+    <div class="grid">
+      <article>
+        <img src="https://images.unsplash.com/photo-1585386959984-a41552231693?auto=format&fit=crop&w=900&q=80" alt="Smartwatch">
+        <h3>Smartwatch Pro</h3>
+        <p>Track your health, calls, and notifications in style.</p>
+        <button onclick="addToCart('Smartwatch Pro')">Add to Cart</button>
+      </article>
+
+      <article>
+        <img src="https://images.unsplash.com/photo-1580894894513-f96cde168351?auto=format&fit=crop&w=900&q=80" alt="Wireless Earphones">
+        <h3>Wireless Earphones</h3>
+        <p>Crystal-clear sound with noise cancellation and long battery life.</p>
+        <button onclick="addToCart('Wireless Earphones')">Add to Cart</button>
+      </article>
+
+      <article>
+        <img src="https://images.unsplash.com/photo-1618498082410-b3f8b6f1b91e?auto=format&fit=crop&w=900&q=80" alt="Fitness Tracker">
+        <h3>Fitness Tracker</h3>
+        <p>Measure your heart rate, sleep, and daily activities with precision.</p>
+        <button onclick="addToCart('Fitness Tracker')">Add to Cart</button>
+      </article>
+    </div>
+  </main>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
