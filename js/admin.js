@@ -3,15 +3,11 @@
 // --- GLOBAL VARIABLES ---
 let totalRequests = 0;
 let blockedThreats = 0;
-let trafficChart; // Variable to hold our chart instance
+let trafficChart;
+let threatPieChart; // New chart for the Analysis tab
 
-// Data Lists
-const safeQueries = [
-    "/shop?product_id=12", "/search?q=smartwatch", "/login?user=guest", "/home", "/cart/add?item=watch"
-];
-const attackQueries = [
-    "' OR 1=1 --", "UNION SELECT user, password", "DROP TABLE products;", "admin' --", "/shop?id=1 OR 1=1"
-];
+const safeQueries = ["/shop?id=12", "/search?q=watch", "/login", "/home", "/cart"];
+const attackQueries = ["' OR 1=1 --", "UNION SELECT user, pass", "DROP TABLE users;", "admin' --"];
 
 // --- 1. LOGIN HANDLING ---
 function adminLogin(event) {
@@ -23,144 +19,116 @@ function adminLogin(event) {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'grid';
         
-        // Initialize the Chart and Start Traffic
-        initChart();
+        // Initialize Charts and Traffic
+        initLiveChart();
+        initThreatChart(); // Load the second chart
         startSimulation(); 
     } else {
-        alert("ACCESS DENIED: Invalid Credentials");
+        alert("ACCESS DENIED");
     }
 }
 
-// --- 2. CHART CONFIGURATION ---
-function initChart() {
-    const ctx = document.getElementById('trafficChart').getContext('2d');
+// --- 2. TAB SWITCHING LOGIC (Makes the sidebar work) ---
+function switchTab(tabName) {
+    // 1. Hide all tab contents
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(div => div.classList.remove('active'));
     
+    // 2. Deactivate all sidebar links
+    const links = document.querySelectorAll('.sidebar a');
+    links.forEach(a => a.classList.remove('active'));
+
+    // 3. Show specific tab and activate link
+    document.getElementById('tab-' + tabName).classList.add('active');
+    document.getElementById('nav-' + tabName).classList.add('active');
+}
+
+// --- 3. CHART CONFIGURATION ---
+
+// Main Line Chart (Live Monitor)
+function initLiveChart() {
+    const ctx = document.getElementById('trafficChart').getContext('2d');
     trafficChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [], // Time labels will be added dynamically
+            labels: [],
             datasets: [{
-                label: 'Safe Traffic',
-                borderColor: '#2ea043', // Green
-                backgroundColor: 'rgba(46, 160, 67, 0.1)',
-                data: [],
-                tension: 0.4,
-                fill: true
-            },
-            {
-                label: 'SQL Injection Attacks',
-                borderColor: '#c62828', // Red
-                backgroundColor: 'rgba(198, 40, 40, 0.2)',
-                data: [],
-                tension: 0.1,
-                fill: true
+                label: 'Safe', borderColor: '#2ea043', data: [], tension: 0.4
+            }, {
+                label: 'Attack', borderColor: '#c62828', data: [], tension: 0.1
             }]
         },
         options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { labels: { color: 'white' } }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: { color: '#30363d' },
-                    ticks: { color: '#8b949e' }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: '#8b949e' }
-                }
-            },
-            animation: {
-                duration: 500 // Smooth animation
-            }
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { display: false }, y: { beginAtZero: true } },
+            animation: { duration: 0 } // Disable animation for performance
         }
     });
 }
 
-// --- 3. TRAFFIC SIMULATION ---
+// Pie Chart (Threat Analysis Tab)
+function initThreatChart() {
+    const ctx = document.getElementById('threatPieChart').getContext('2d');
+    threatPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['SQL Injection', 'XSS', 'Brute Force'],
+            datasets: [{
+                data: [65, 20, 15],
+                backgroundColor: ['#c62828', '#f1c40f', '#e67e22'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: 'white' } } } }
+    });
+}
 
+// --- 4. TRAFFIC SIMULATION ---
 function startSimulation() {
-    // Generate traffic every 1.5 seconds
     setInterval(() => {
-        // 20% chance of attack
         const isAttack = Math.random() < 0.2; 
         addLogRow(isAttack);
     }, 1500);
 }
 
-function generateRandomAttack() {
-    addLogRow(true); // Force an attack
-}
+function generateRandomAttack() { addLogRow(true); }
 
 function addLogRow(isAttack) {
     totalRequests++;
     
-    // 1. Generate Fake Data
+    // Generate Fake Data
     const queryList = isAttack ? attackQueries : safeQueries;
     const query = queryList[Math.floor(Math.random() * queryList.length)];
     const ip = "192.168.1." + Math.floor(Math.random() * 255);
-    const now = new Date();
-    const timeString = now.toLocaleTimeString();
+    const time = new Date().toLocaleTimeString();
+    
+    let prediction = isAttack ? "MALICIOUS" : "SAFE";
+    let cssClass = isAttack ? "color:#f85149; font-weight:bold" : "color:#2ea043";
 
-    // 2. Logic for Prediction
-    let prediction = "";
-    let action = "";
-    let cssClass = "";
+    if (isAttack) blockedThreats++;
 
-    if (isAttack) {
-        blockedThreats++;
-        prediction = "MALICIOUS (99%)";
-        action = "BLOCKED";
-        cssClass = "badge-danger";
-    } else {
-        prediction = "SAFE (98%)";
-        action = "ALLOWED";
-        cssClass = "badge-safe";
-    }
-
-    // 3. Update Stats Text
+    // Update Stats
     document.getElementById('totalReq').innerText = totalRequests;
     document.getElementById('blockedReq').innerText = blockedThreats;
 
-    // 4. Update Logs Table
+    // Update Table
     const tableBody = document.getElementById('logBody');
     const newRow = document.createElement('tr');
-    newRow.innerHTML = `
-        <td style="color:#8b949e">${timeString}</td>
-        <td>${ip}</td>
-        <td style="font-family:monospace; color: ${isAttack ? '#ff7b72' : '#e6edf3'}">${query}</td>
-        <td><span class="${cssClass}">${prediction}</span></td>
-        <td>${action}</td>
-    `;
+    newRow.innerHTML = `<td>${time}</td><td>${ip}</td><td style="font-family:monospace">${query}</td><td style="${cssClass}">${prediction}</td><td>${isAttack ? 'BLOCKED' : 'ALLOWED'}</td>`;
     tableBody.prepend(newRow);
     if (tableBody.children.length > 8) tableBody.removeChild(tableBody.lastChild);
 
-    // 5. UPDATE CHART
+    // Update Chart
     if (trafficChart) {
-        const timeLabel = now.getSeconds() + 's';
+        trafficChart.data.labels.push(time);
+        trafficChart.data.datasets[0].data.push(isAttack ? 0 : 1);
+        trafficChart.data.datasets[1].data.push(isAttack ? 1 : 0);
         
-        // Add new label
-        trafficChart.data.labels.push(timeLabel);
-        
-        // Add data points: 1 if present, 0 if not (just for visual spiking)
-        if (isAttack) {
-            trafficChart.data.datasets[0].data.push(0); // Safe line drops
-            trafficChart.data.datasets[1].data.push(1); // Attack line spikes
-        } else {
-            trafficChart.data.datasets[0].data.push(1); // Safe line up
-            trafficChart.data.datasets[1].data.push(0); // Attack line flat
-        }
-
-        // Keep chart clean (only show last 10 points)
-        if (trafficChart.data.labels.length > 10) {
+        if (trafficChart.data.labels.length > 15) {
             trafficChart.data.labels.shift();
             trafficChart.data.datasets[0].data.shift();
             trafficChart.data.datasets[1].data.shift();
         }
-
         trafficChart.update();
     }
 }
