@@ -6,6 +6,22 @@
   <title>Cart - TechWear Hub</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* Simple styling for cart items */
+    .cart-item {
+        padding: 1rem;
+        border-bottom: 1px solid #333;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cart-total {
+        margin-top: 2rem;
+        font-size: 1.2rem;
+        font-weight: bold;
+        text-align: right;
+    }
+  </style>
 </head>
 <body>
   <nav class="container-fluid">
@@ -14,17 +30,97 @@
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
       <li><a href="login.html" id="loginLink">Login</a></li>
-      <li><a href="cart.html">Cart</a></li>
+      <li><a href="cart.html" role="button" class="outline">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
   <main class="container">
     <h2>Your Cart</h2>
-    <ul id="cartList"></ul>
-    <button onclick="checkout()">Checkout</button>
+    
+    <section id="cartList">
+        <p>Loading cart...</p>
+    </section>
+
+    <div class="cart-total" id="cartTotal"></div>
+
+    <hr>
+    
+    <div class="grid">
+        <button onclick="checkout()">Checkout</button>
+        <button class="secondary outline" onclick="clearCart()">Empty Cart</button>
+    </div>
   </main>
 
   <script src="js/main.js"></script>
+  
+  <script>
+    // --- CART LOGIC ---
+    
+    // 1. Load the Cart on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        const cartList = document.getElementById('cartList');
+        const cartTotal = document.getElementById('cartTotal');
+        
+        // Retrieve cart from LocalStorage
+        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+
+        // Check if empty
+        if (cart.length === 0) {
+            cartList.innerHTML = '<p>Your cart is empty. Go <a href="shop.html">shopping</a>!</p>';
+            return;
+        }
+
+        // Generate HTML for each item
+        let html = '';
+        let total = 0;
+        
+        cart.forEach((product, index) => {
+            // Default price to 0 if not saved
+            let price = product.price || 0; 
+            total += parseFloat(price);
+
+            html += `
+                <div class="cart-item">
+                    <span>${product.name}</span>
+                    <span>${price > 0 ? '$' + price : ''}</span>
+                    <a href="#" onclick="removeItem(${index})" style="color:red; font-size:0.8em">Remove</a>
+                </div>
+            `;
+        });
+
+        cartList.innerHTML = html;
+        if(total > 0) {
+            cartTotal.innerText = `Total: $${total.toFixed(2)}`;
+        }
+    });
+
+    // 2. Function to Remove a single item
+    function removeItem(index) {
+        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+        cart.splice(index, 1); // Remove item at specific index
+        localStorage.setItem('techWearCart', JSON.stringify(cart));
+        window.location.reload(); // Refresh page to show changes
+    }
+
+    // 3. Function to Clear All
+    function clearCart() {
+        localStorage.removeItem('techWearCart');
+        window.location.reload();
+    }
+
+    // 4. Checkout Function
+    function checkout() {
+        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+        if (cart.length === 0) {
+            alert("Your cart is empty!");
+        } else {
+            alert("Thank you for your purchase! (Demo Order Placed)");
+            // Clear cart after purchase
+            localStorage.removeItem('techWearCart');
+            window.location.href = 'index.html';
+        }
+    }
+  </script>
 </body>
 </html>
