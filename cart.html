@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
   <style>
-    /* Simple styling for cart items */
+    /* --- CUSTOM STYLES --- */
     .cart-item {
         padding: 1rem;
         border-bottom: 1px solid #333;
@@ -17,20 +17,45 @@
     }
     .cart-total {
         margin-top: 2rem;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         font-weight: bold;
         text-align: right;
+        color: var(--primary);
+    }
+    
+    /* Phone Input Styling */
+    .phone-group {
+        display: flex;
+        align-items: center;
+    }
+    .phone-prefix {
+        background-color: var(--card-background-color);
+        border: 1px solid var(--muted-border-color);
+        color: var(--muted-color);
+        padding: 0.75rem;
+        border-radius: 4px 0 0 4px;
+        font-weight: bold;
+    }
+    .phone-input {
+        border-radius: 0 4px 4px 0 !important;
+        flex-grow: 1;
+    }
+
+    /* Modal Styling adjustments for Pico */
+    dialog article {
+        width: 100%;
+        max-width: 600px;
     }
   </style>
 </head>
 <body>
+
   <nav class="container-fluid">
     <ul><li><strong>TechWear Hub</strong></li></ul>
     <ul id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
-      <li><a href="login.html" id="loginLink">Login</a></li>
-      <li><a href="cart.html" role="button" class="outline">Cart</a></li>
+      <li><a href="profile.html" id="loginLink">Login</a></li> <li><a href="cart.html" role="button" class="outline">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
@@ -47,79 +72,147 @@
     <hr>
     
     <div class="grid">
-        <button onclick="checkout()">Checkout</button>
+        <button onclick="openCheckout()" class="contrast">Proceed to Checkout</button>
         <button class="secondary outline" onclick="clearCart()">Empty Cart</button>
     </div>
   </main>
 
+  <dialog id="checkoutModal">
+    <article>
+      <header>
+        <a href="#close" aria-label="Close" class="close" onclick="closeCheckout()"></a>
+        <h3>Secure Checkout</h3>
+      </header>
+      
+      <form onsubmit="processOrder(event)">
+        <h5>Shipping Details</h5>
+        <label for="address">Full Address</label>
+        <textarea id="address" placeholder="House No, Street, City, Pincode" required></textarea>
+
+        <label for="phone">Phone Number</label>
+        <div class="phone-group">
+            <span class="phone-prefix">+91</span>
+            <input type="tel" id="phone" class="phone-input" placeholder="98765 43210" pattern="[0-9]{10}" title="Please enter a valid 10-digit number" required>
+        </div>
+
+        <h5 style="margin-top: 1.5rem;">Payment Method</h5>
+        <label for="cardName">Name on Card</label>
+        <input type="text" id="cardName" placeholder="ARAVIND K" required>
+
+        <label for="cardNumber">Card Number</label>
+        <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
+
+        <div class="grid">
+            <div>
+                <label for="expiry">Expiry Date</label>
+                <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required>
+            </div>
+            <div>
+                <label for="cvv">CVV</label>
+                <input type="password" id="cvv" placeholder="123" maxlength="3" required>
+            </div>
+        </div>
+
+        <footer>
+          <button type="button" class="secondary" onclick="closeCheckout()">Cancel</button>
+          <button type="submit" id="payBtn">Pay & Place Order</button>
+        </footer>
+      </form>
+    </article>
+  </dialog>
+
   <script src="js/main.js"></script>
   
   <script>
-    // --- CART LOGIC ---
+    // --- CART PAGE LOGIC ---
     
-    // 1. Load the Cart on page load
+    // 1. Load Cart Logic (Same as before)
     document.addEventListener('DOMContentLoaded', () => {
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
         
-        // Retrieve cart from LocalStorage
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
 
-        // Check if empty
         if (cart.length === 0) {
             cartList.innerHTML = '<p>Your cart is empty. Go <a href="shop.html">shopping</a>!</p>';
+            cartTotal.style.display = 'none';
             return;
         }
 
-        // Generate HTML for each item
         let html = '';
         let total = 0;
         
         cart.forEach((product, index) => {
-            // Default price to 0 if not saved
-            let price = product.price || 0; 
-            total += parseFloat(price);
+            let price = parseFloat(product.price) || 0; 
+            total += price;
 
             html += `
                 <div class="cart-item">
                     <span>${product.name}</span>
-                    <span>${price > 0 ? '$' + price : ''}</span>
-                    <a href="#" onclick="removeItem(${index})" style="color:red; font-size:0.8em">Remove</a>
+                    <span>$${price.toFixed(2)}</span>
+                    <a href="#" onclick="removeItem(${index})" style="color:red; font-size:0.8em; margin-left:1rem">Remove</a>
                 </div>
             `;
         });
 
         cartList.innerHTML = html;
-        if(total > 0) {
-            cartTotal.innerText = `Total: $${total.toFixed(2)}`;
-        }
+        cartTotal.innerText = `Total: $${total.toFixed(2)}`;
     });
 
-    // 2. Function to Remove a single item
     function removeItem(index) {
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
-        cart.splice(index, 1); // Remove item at specific index
+        cart.splice(index, 1);
         localStorage.setItem('techWearCart', JSON.stringify(cart));
-        window.location.reload(); // Refresh page to show changes
-    }
-
-    // 3. Function to Clear All
-    function clearCart() {
-        localStorage.removeItem('techWearCart');
         window.location.reload();
     }
 
-    // 4. Checkout Function
-    function checkout() {
+    function clearCart() {
+        if(confirm("Are you sure you want to empty your cart?")) {
+            localStorage.removeItem('techWearCart');
+            window.location.reload();
+        }
+    }
+
+    // --- CHECKOUT LOGIC ---
+
+    // Open the Modal
+    function openCheckout() {
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
         if (cart.length === 0) {
             alert("Your cart is empty!");
-        } else {
-            alert("Thank you for your purchase! (Demo Order Placed)");
-            // Clear cart after purchase
-            localStorage.removeItem('techWearCart');
-            window.location.href = 'index.html';
+            return;
         }
+        const modal = document.getElementById('checkoutModal');
+        modal.setAttribute('open', true); // Pico.css / HTML5 Dialog method
+    }
+
+    // Close the Modal
+    function closeCheckout() {
+        const modal = document.getElementById('checkoutModal');
+        modal.removeAttribute('open');
+    }
+
+    // Process the Order
+    function processOrder(event) {
+        event.preventDefault(); // Stop form from refreshing immediately
+
+        const payBtn = document.getElementById('payBtn');
+        const originalText = payBtn.innerText;
+
+        // 1. Show Loading State
+        payBtn.setAttribute('aria-busy', 'true');
+        payBtn.innerText = 'Processing Payment...';
+
+        // 2. Simulate Delay (2 seconds)
+        setTimeout(() => {
+            // Success!
+            alert("Payment Successful! Your order has been placed.");
+            
+            // Clear Cart and Redirect
+            localStorage.removeItem('techWearCart');
+            closeCheckout();
+            window.location.href = 'profile.html'; // Go to profile to see "Recent Orders"
+        }, 2000);
     }
   </script>
 </body>
