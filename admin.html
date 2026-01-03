@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin Dashboard - TechWear Hub</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="container-fluid">
+    <ul><li><strong>Admin Dashboard</strong></li></ul>
+    <ul><li><a href="index.html">Back to Site</a></li></ul>
+  </nav>
+
+  <main class="container">
+    <section id="adminLoginSection">
+      <hgroup>
+        <h2>Admin Login</h2>
+        <h3>Restricted Access Only</h3>
+      </hgroup>
+      <form onsubmit="adminLogin(event)">
+        <input type="text" id="adminUser" placeholder="Admin Username" required>
+        <input type="password" id="adminPass" placeholder="Admin Password" required>
+        <button type="submit">Login as Admin</button>
+      </form>
+    </section>
+
+    <section id="adminPanel" style="display:none;">
+      <hgroup>
+        <h2>SQL Injection Detection Tool</h2>
+        <h3>Live Attack Log Monitor</h3>
+      </hgroup>
+      <div class="admin-log">
+        <table id="logTable" class="log-table">
+          <thead>
+            <tr><th>Time</th><th>IP</th><th>Request</th><th>Prediction</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <button onclick="generateLog()">Refresh Logs</button>
+      </div>
+      <pre>
+model = load_model('sql_injection_detector.pkl')
+prediction = model.predict(request_input)
+if prediction == 'SQLi':
+    log_attack(ip_address, request_input)
+      </pre>
+    </section>
+  </main>
+
+  <footer class="container">
+    <small><a href="#">TechWear Hub</a></small>
+  </footer>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
