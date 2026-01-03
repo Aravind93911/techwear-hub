@@ -3,15 +3,98 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TechWear Hub - Home</title>
+  <title>TechWear Hub - Premium Smart Gear</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* --- CUSTOM PREMIUM STYLES --- */
+
+    /* 1. The Hero Section: Big impact banner */
+    .hero-section {
+        /* High-quality background image with a dark overlay gradient for text readability */
+        background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1468495244123-6c6c332ee490?auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        /* Tall height for cinematic feel */
+        min-height: 70vh; 
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        color: white;
+        padding: 2rem;
+        margin-top: -2rem; /* Pulls it up under the nav bar slightly */
+        margin-bottom: 3rem;
+        border-radius: 0 0 12px 12px; /* Subtle rounding at bottom */
+    }
+
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 1rem;
+        color: #fff; /* Ensure white text even in light mode */
+    }
+
+    .hero-section p {
+        font-size: 1.2rem;
+        max-width: 600px;
+        color: #e0e0e0; /* Slightly off-white for easier reading */
+        margin-bottom: 2rem;
+    }
+
+    /* 2. Feature Columns: Adding value proposition */
+    .features-grid {
+        text-align: center;
+        margin-bottom: 4rem;
+    }
+    .feature-item h3 {
+        margin-bottom: 0.5rem;
+    }
+    .feature-item p {
+        color: var(--muted-color);
+    }
+
+    /* 3. Product Teaser Section */
+    .teaser-section h2 {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+    .product-card img {
+        height: 200px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 4px 4px 0 0;
+    }
+    .product-card {
+        transition: transform 0.3s ease;
+        border: none;
+        background: var(--card-background-color);
+        box-shadow: var(--card-box-shadow);
+    }
+    /* Subtle hover effect for premium feel */
+    .product-card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* 4. Footer enhancements */
+    .site-footer {
+        text-align: center;
+        padding: 3rem 0;
+        margin-top: 4rem;
+        border-top: 1px solid var(--muted-border-color);
+        font-size: 0.9rem;
+        color: var(--muted-color);
+    }
+  </style>
 </head>
 <body>
+
   <nav class="container-fluid">
     <ul><li><strong>TechWear Hub</strong></li></ul>
     <ul id="navLinks">
-      <li><a href="index.html">Home</a></li>
+      <li><a href="index.html" role="button" class="outline">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
       <li><a href="login.html" id="loginLink">Login</a></li>
       <li><a href="cart.html">Cart</a></li>
@@ -19,50 +102,62 @@
     </ul>
   </nav>
 
-  <main class="container">
-    <section>
-        <h2>Welcome to TechWear Hub</h2>
-        <p>Shop the latest smartwatches, earphones, and fitness trackers — all designed for a smarter lifestyle.</p>
-        <a href="shop.html" role="button">Go to Shop</a>
+  <main class="container-fluid" style="padding: 0;">
+    
+    <section class="hero-section">
+      <h1>Define Your Future.</h1>
+      <p>Discover the intersection of style and technology. Premium smart wearables designed for the modern lifestyle.</p>
+      <a href="shop.html" role="button" class="contrast">Explore Collection</a>
     </section>
 
-    <section>
-        <h3>Featured Products</h3>
-        <div class="amazon-product-grid">
-
-          <div class="product-card">
-            <div class="image-container">
-              <img src="images/smartwatch.jpg" alt="Smart Watch Pro">
-            </div>
-            <h2 class="product-title">Smart Watch Pro - Heart Rate Monitor, GPS, Waterproof, 5 Day Battery Life (Black)</h2>
-            <div class="price"><span>$</span>199.99</div>
-            <button class="add-to-cart-btn">Add to Cart</button>
+    <div class="container">
+        <section class="grid features-grid">
+          <div class="feature-item">
+            <h3>💎 Premium Materials</h3>
+            <p>Aerospace-grade aluminum and sapphire glass ensure durability.</p>
           </div>
-
-          <div class="product-card">
-            <div class="image-container">
-               <img src="images/earphones.jpg" alt="True Wireless Earbuds">
-            </div>
-            <h2 class="product-title">True Wireless Earbuds with Charging Case, Active Noise Cancelling, Bluetooth 5.2 (White)</h2>
-            <div class="price"><span>$</span>79.99</div>
-            <button class="add-to-cart-btn">Add to Cart</button>
+          <div class="feature-item">
+            <h3>🔋 All-Week Battery</h3>
+            <p>Efficient chipsets keep you connected for up to 7 days on a single charge.</p>
           </div>
-
-          <div class="product-card">
-            <div class="image-container">
-               <img src="images/tracker.jpg" alt="Slim Fitness Tracker">
-            </div>
-            <h2 class="product-title">Slim Fitness Tracker Band - Step Counter, Sleep Monitor, OLED Display (Black)</h2>
-            <div class="price"><span>$</span>49.95</div>
-            <button class="add-to-cart-btn">Add to Cart</button>
+          <div class="feature-item">
+            <h3>🩺 Advanced Biometrics</h3>
+            <p>Clinical-grade sensors for precise heart rate and sleep tracking.</p>
           </div>
+        </section>
 
-        </div>
-    </section>
-    </main>
+        <hr>
 
-  <footer class="container">
-    <small><a href="#">Privacy Policy</a> • <a href="#">Terms</a></small>
+        <section class="teaser-section" style="margin-top: 3rem;">
+          <h2>Featured Gear</h2>
+          <div class="grid">
+            <article class="product-card">
+              <img src="https://images.unsplash.com/photo-1544117519-31a4b719223d?auto=format&fit=crop&w=600&q=80" alt="Smartwatch on wrist">
+              <div style="padding: 1.5rem;">
+                  <h3>The Chrono Series</h3>
+                  <p>Elegant design meets powerful tracking.</p>
+              </div>
+            </article>
+            <article class="product-card">
+              <img src="https://images.unsplash.com/photo-1606220588913-b3aacb4d2f46?auto=format&fit=crop&w=600&q=80" alt="Wireless Earbuds">
+              <div style="padding: 1.5rem;">
+                  <h3>Sonic Buds Pro</h3>
+                  <p>Immersive sound with active noise canceling.</p>
+              </div>
+            </article>
+          </div>
+          <div style="text-align: center; margin-top: 2rem;">
+              <a href="shop.html" role="button" class="secondary">View All Products</a>
+          </div>
+        </section>
+    </div>
+  </main>
+
+  <footer class="site-footer container">
+    <p>&copy; 2024 TechWear Hub. The future is on your wrist.</p>
+    <small>
+        <a href="#">Privacy Policy</a> • <a href="#">Terms of Service</a> • <a href="#">Contact Us</a>
+    </small>
   </footer>
 
   <script src="js/main.js"></script>
