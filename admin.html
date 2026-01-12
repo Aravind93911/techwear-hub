@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Security Operations Center</title>
   
+  <script>
+    // const isOwner = localStorage.getItem('site_owner_access');
+    // if (isOwner !== 'granted_secure_8829') {
+    //    // alert("⛔ ACCESS DENIED");
+    //    // window.location.href = 'index.html'; 
+    // }
+    // (I commented this out so you don't get locked out while testing. Uncomment to enable security.)
+  </script>
+
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -12,17 +21,14 @@
     /* Admin Specific Styling */
     body { min-height: 100vh; display: flex; flex-direction: column; }
     
-    /* Login Overlay */
     #login-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: black; z-index: 9999;
         display: flex; align-items: center; justify-content: center;
     }
     
-    /* Layout */
     .admin-layout { display: none; height: 100vh; grid-template-columns: 250px 1fr; }
     
-    /* Sidebar */
     .sidebar { background: #161b22; border-right: 1px solid #30363d; padding: 2rem 1rem; display: flex; flex-direction: column; }
     .sidebar a {
         display: block; padding: 0.75rem 1rem; color: #8b949e; text-decoration: none;
@@ -31,19 +37,15 @@
     .sidebar a:hover { background: #21262d; color: white; }
     .sidebar a.active { background: #1f6feb; color: white; font-weight: bold; }
     
-    /* Content Area */
     .content { padding: 2rem; overflow-y: auto; background: #0d1117; }
     
-    /* Stats Grid */
     .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
     .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
     .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; margin: 0.5rem 0; }
     
-    /* Tabs */
     .tab-content { display: none; animation: fadeIn 0.3s; }
     .tab-content.active { display: block; }
 
-    /* Tables */
     table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
     th { text-align: left; border-bottom: 1px solid #30363d; padding: 1rem; color: #8b949e; }
     td { padding: 1rem; border-bottom: 1px solid #21262d; }
@@ -89,7 +91,6 @@
         
         <div id="tab-dashboard" class="tab-content active">
             <h2>Live Threat Monitoring</h2>
-            
             <div class="stats-grid">
                 <div class="stat-card">
                     <div style="color: #8b949e;">Total Requests</div>
@@ -104,7 +105,6 @@
                     <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">SECURE</div>
                 </div>
             </div>
-
             <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
                 <canvas id="trafficChart"></canvas>
             </div>
@@ -113,7 +113,7 @@
         <div id="tab-users" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>User Database (Real-Time)</h2>
-                <button class="outline" onclick="loadUsers()">↻ Refresh List</button>
+                <button id="refreshBtn" class="outline" onclick="manualRefresh()">↻ Refresh List</button>
             </div>
             
             <table role="grid">
@@ -129,6 +129,7 @@
                 <tbody id="userTableBody">
                     </tbody>
             </table>
+            <p id="emptyMsg" style="text-align:center; color:#666; display:none; margin-top:2rem">No users found.</p>
         </div>
 
         <div id="tab-logs" class="tab-content">
@@ -152,12 +153,10 @@
   </div>
 
   <script>
-    // --- VARIABLES ---
     let totalRequests = 0;
     let blockedThreats = 0;
     let trafficChart;
     
-    // --- LOGIN SYSTEM ---
     document.addEventListener('DOMContentLoaded', () => {
         if (localStorage.getItem('adminSession') === 'active') {
             showDashboard();
@@ -168,7 +167,6 @@
         e.preventDefault();
         const u = document.getElementById('adminUser').value;
         const p = document.getElementById('adminPass').value;
-        
         if (u === 'admin' && p === 'admin123') {
             localStorage.setItem('adminSession', 'active');
             showDashboard();
@@ -202,50 +200,74 @@
         if(tabName === 'users') loadUsers();
     }
 
-    // --- USER MANAGEMENT (REAL DATA) ---
+    // --- UPDATED USER REFRESH LOGIC ---
+    function manualRefresh() {
+        const btn = document.getElementById('refreshBtn');
+        const originalText = btn.innerText;
+
+        // 1. Show Loading State
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerText = "Scanning...";
+        
+        // 2. Clear Table Briefly (Visual Feedback)
+        document.getElementById('userTableBody').innerHTML = '';
+
+        // 3. Wait 500ms then Load Data
+        setTimeout(() => {
+            loadUsers();
+            btn.removeAttribute('aria-busy');
+            btn.innerText = "✅ Updated";
+            
+            // 4. Reset Button Text
+            setTimeout(() => { btn.innerText = originalText; }, 1000);
+        }, 500);
+    }
+
     function loadUsers() {
         const tbody = document.getElementById('userTableBody');
-        tbody.innerHTML = ''; // Clear table
+        tbody.innerHTML = ''; 
 
-        // 1. Define the Admin (Always exists)
-        let allUsers = [
-            { id: 100, user: "admin", role: "Administrator", status: "Active" }
-        ];
+        // 1. Admin
+        let allUsers = [{ id: 100, user: "admin", role: "Administrator", status: "Active" }];
 
-        // 2. Fetch REAL Registered Users from LocalStorage
+        // 2. REAL Users from Registration Page
         const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
 
-        // 3. Add them to the list
         registeredUsers.forEach((u, index) => {
             allUsers.push({
-                id: 200 + index,
+                id: 201 + index,
                 user: u.username,
                 role: "Customer",
                 status: "Active"
             });
         });
 
-        // 4. Add a Fake Hacker (For Demo purposes)
+        // 3. Mock Hacker
         allUsers.push({ id: 666, user: "hacker_unknown", role: "Unverified", status: "Suspicious" });
 
-        // 5. Render to Table
-        allUsers.forEach(u => {
-            let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
-            if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
+        // 4. Render
+        if(allUsers.length === 0) {
+            document.getElementById('emptyMsg').style.display = 'block';
+        } else {
+            document.getElementById('emptyMsg').style.display = 'none';
+            allUsers.forEach(u => {
+                let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
+                if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
 
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>#${u.id}</td>
-                <td><strong>${u.user}</strong></td>
-                <td>${u.role}</td>
-                <td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td>
-                <td>
-                    ${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : 
-                      `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>#${u.id}</td>
+                    <td><strong>${u.user}</strong></td>
+                    <td>${u.role}</td>
+                    <td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td>
+                    <td>
+                        ${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : 
+                          `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
     }
 
     function blockUser(btn) {
@@ -261,7 +283,6 @@
         }
     }
 
-    // --- CHARTS & SIMULATION ---
     function initChart() {
         const ctx = document.getElementById('trafficChart').getContext('2d');
         trafficChart = new Chart(ctx, {
@@ -302,7 +323,6 @@
             }
             trafficChart.update();
 
-            // CHECK FOR REAL ATTACKS
             let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
             if (realAttacks.length > 0) {
                 const attack = realAttacks.shift();
