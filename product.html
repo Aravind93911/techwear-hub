@@ -4,15 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Product Details - TechWear Hub</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  
   <style>
-    /* Detail Page Specifics */
+    /* Detail Page Layout */
     .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
     .detail-img { width: 100%; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
     .specs-box { background: #161b22; padding: 1.5rem; border-radius: 8px; margin-top: 2rem; border: 1px solid #30363d; }
     
-    /* Responsive adjustment */
     @media (max-width: 768px) { .detail-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
@@ -29,16 +30,16 @@
 
   <main class="container" style="padding-top: 3rem;">
     
-    <a href="shop.html" style="text-decoration: none; color: var(--muted-color);">← Back to Shop</a>
+    <a href="shop.html" style="text-decoration: none; color: var(--muted-color); margin-bottom: 2rem; display: inline-block;">← Back to Shop</a>
     
-    <div class="detail-grid" style="margin-top: 1rem;">
+    <div class="detail-grid">
         <div>
             <img id="detailImage" src="" alt="Product Image" class="detail-img">
         </div>
 
         <div>
             <h1 id="detailName" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Loading...</h1>
-            <h2 id="detailPrice" style="color: var(--primary);">$0.00</h2>
+            <h2 id="detailPrice" style="color: #00bcd4; margin-bottom: 1.5rem;">₹0</h2>
             <p id="detailDesc" style="font-size: 1.1rem; line-height: 1.6;">Loading description...</p>
             
             <button id="detailAddBtn" class="contrast" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">Add to Cart</button>
@@ -53,6 +54,87 @@
 
   </main>
 
-  <script src="js/main.js"></script>
+  <script>
+    // 1. SHARED PRODUCT DATA (Must match Shop Page)
+    const products = [
+        { 
+            id: 1, name: "Smartwatch Pro", price: 15999, 
+            image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80",
+            desc: "OLED display, ECG monitoring, and 3-day battery life in a sleek aerospace aluminum body.",
+            specs: ["Water Resistance: 50m", "Battery: 72 Hours", "Sensors: SpO2, Heart Rate", "Connectivity: BT 5.0"]
+        },
+        { 
+            id: 2, name: "Sonic Buds", price: 6999, 
+            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
+            desc: "Active Noise Cancellation (ANC) with transparency mode and spatial audio support.",
+            specs: ["Battery: 24 Hours", "Driver: 11mm Dynamic", "Resistance: IPX4", "Charging: Wireless"]
+        },
+        { 
+            id: 3, name: "Fitness Band X", price: 3499, 
+            image: "https://images.unsplash.com/photo-1557935728-95d66cb15197?auto=format&fit=crop&w=600&q=80",
+            desc: "Ultra-lightweight design. Tracks steps, sleep, and heart rate. Waterproof up to 50m.",
+            specs: ["Weight: 15g", "Screen: AMOLED", "Modes: 30+ Sports", "Battery: 14 Days"]
+        },
+        { 
+            id: 4, name: "VR Headset Horizon", price: 24999, 
+            image: "https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80",
+            desc: "Immersive 4K virtual reality experience with 110-degree field of view.",
+            specs: ["Resolution: 4K", "Refresh Rate: 90Hz", "Tracking: 6DoF", "Controllers: Included"]
+        },
+        { 
+            id: 5, name: "Pro Gaming Mouse", price: 4499, 
+            image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80",
+            desc: "High-precision 25K sensor with customizable RGB lighting and programmable buttons.",
+            specs: ["DPI: 25,000", "Buttons: 8 Programmable", "Weight: 63g", "Connection: 2.4GHz Wireless"]
+        },
+        { 
+            id: 6, name: "Mech Keyboard K1", price: 9999, 
+            image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80",
+            desc: "Tactile mechanical switches with aircraft-grade aluminum frame.",
+            specs: ["Switches: Cherry MX Blue", "Backlight: RGB per-key", "Layout: TKL (87 Keys)", "Cable: Detachable USB-C"]
+        }
+    ];
+
+    // 2. LOAD DETAILS
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const productId = parseInt(params.get('id'));
+
+        const product = products.find(p => p.id === productId);
+
+        if (product) {
+            document.getElementById('detailImage').src = product.image;
+            document.getElementById('detailName').innerText = product.name;
+            // Format Price with Commas
+            document.getElementById('detailPrice').innerText = "₹" + product.price.toLocaleString('en-IN');
+            document.getElementById('detailDesc').innerText = product.desc;
+            
+            // Setup Button
+            document.getElementById('detailAddBtn').onclick = function() {
+                addToCart(product.id);
+            };
+
+            // Specs
+            const specsList = document.getElementById('detailSpecs');
+            specsList.innerHTML = '';
+            product.specs.forEach(spec => {
+                specsList.innerHTML += `<li>${spec}</li>`;
+            });
+        } else {
+            document.querySelector('main').innerHTML = "<h2>Product not found. <a href='shop.html'>Go Back</a></h2>";
+        }
+    });
+
+    // 3. CART FUNCTION
+    function addToCart(id) {
+        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+        const product = products.find(p => p.id === id);
+        if(product) {
+            cart.push(product);
+            localStorage.setItem('techWearCart', JSON.stringify(cart));
+            alert(`${product.name} added to cart!`);
+        }
+    }
+  </script>
 </body>
 </html>
