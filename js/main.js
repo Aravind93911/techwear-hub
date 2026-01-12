@@ -138,6 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 // js/main.js - Update this function
 
+// js/main.js
+
 function userLogin(event) {
     event.preventDefault(); 
     
@@ -146,30 +148,53 @@ function userLogin(event) {
     const userVal = usernameInput.value;
     const passVal = passwordInput.value;
 
-    // --- 1. SIMULATED SQL INJECTION DETECTION ---
-    // List of common SQL attack patterns for simulation
-    const sqlPatterns = ["' OR '1'='1", "' OR 1=1", "UNION SELECT", "DROP TABLE", "--", "admin' --"];
+    console.log("Checking credentials for:", userVal); // Debugging line
+
+    // --- 1. ROBUST SQL INJECTION DETECTION ---
+    // Convert inputs to UpperCase to ensure 'or' matches 'OR'
+    const cleanUser = userVal.toUpperCase();
+    const cleanPass = passVal.toUpperCase();
+
+    const sqlPatterns = [
+        "' OR '1'='1", 
+        "' OR 1=1", 
+        "OR 1=1", 
+        "UNION SELECT", 
+        "DROP TABLE", 
+        "--", 
+        "ADMIN' --"
+    ];
     
-    // Check if the input contains any of these patterns
+    // Check if input contains any pattern
     const isAttack = sqlPatterns.some(pattern => 
-        userVal.includes(pattern) || passVal.includes(pattern)
+        cleanUser.includes(pattern) || cleanPass.includes(pattern)
     );
 
     if (isAttack) {
+        console.log("Attack Detected!"); // Debugging line
         alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!\nRequest has been blocked and logged.");
         
-        // Save this attack to LocalStorage so Admin Panel can see it
+        // Save to Admin Log
         let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
         attackLogs.push({
             time: new Date().toLocaleTimeString(),
-            ip: "192.168.1.105 (You)", // Mock IP
-            query: userVal + " / " + passVal,
+            ip: "192.168.1.105 (User IP)",
+            query: userVal, // Save the exact text typed
             type: "SQL Injection"
         });
         localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
         
-        return; // Stop the login
+        return; // STOP HERE. Do not log them in.
     }
+
+    // --- 2. NORMAL LOGIN ---
+    if (userVal) {
+        localStorage.setItem('currentUser', userVal);
+        window.location.href = 'profile.html'; 
+    } else {
+        alert("Please enter a username");
+    }
+}
 
     // --- 2. NORMAL LOGIN LOGIC ---
     if (userVal) {
