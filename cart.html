@@ -60,6 +60,10 @@
   <main class="container">
     <h2>Your Shopping Cart</h2>
     
+    <div id="loginStatus" style="margin-bottom: 1rem; color: #888; font-size: 0.9rem;">
+        Checking status...
+    </div>
+    
     <section id="cartList">
         <p>Loading cart...</p>
     </section>
@@ -69,7 +73,7 @@
     <hr style="border-color: #333;">
     
     <div class="grid">
-        <button onclick="openCheckout()" class="contrast">Proceed to Checkout</button>
+        <button id="checkoutBtn" onclick="openCheckout()" class="contrast">Proceed to Checkout</button>
         <button class="secondary outline" onclick="clearCart()">Empty Cart</button>
     </div>
   </main>
@@ -121,6 +125,15 @@
   <script>
     // --- LOAD CART ---
     document.addEventListener('DOMContentLoaded', () => {
+        // Debug Check: Are we logged in?
+        const currentUser = localStorage.getItem('currentUser');
+        const statusDiv = document.getElementById('loginStatus');
+        if (currentUser) {
+            statusDiv.innerHTML = `Signed in as: <strong style="color:#2ea043">${currentUser}</strong>`;
+        } else {
+            statusDiv.innerHTML = `Status: <strong style="color:#f85149">Guest (Not Logged In)</strong>`;
+        }
+
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
         
@@ -129,6 +142,7 @@
         if (cart.length === 0) {
             cartList.innerHTML = '<p style="color:#888">Your cart is empty. <a href="shop.html">Go Shop!</a></p>';
             cartTotal.style.display = 'none';
+            document.getElementById('checkoutBtn').disabled = true; // Disable button if empty
             return;
         }
 
@@ -171,27 +185,22 @@
         }
     }
 
-    // --- CHECKOUT LOGIC WITH SECURITY CHECK ---
+    // --- 🔒 THE SECURITY CHECK ---
     function openCheckout() {
-        // 1. Check if Cart is Empty
-        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
-        if (cart.length === 0) {
-            alert("Your cart is empty!");
-            return;
-        }
+        console.log("Attempting checkout...");
 
-        // 2. NEW SECURITY CHECK: Is User Logged In?
+        // 1. Check Login
         const currentUser = localStorage.getItem('currentUser');
-        
+        console.log("Current User:", currentUser);
+
         if (!currentUser) {
-            // IF NOT LOGGED IN:
-            if(confirm("🔒 Access Denied: You must be logged in to proceed to checkout.\n\nClick OK to go to the Login page.")) {
-                window.location.href = 'login.html';
-            }
-            return; // Stop here! Do not open the checkout.
+            // ALERT AND BLOCK
+            alert("🔒 ACCESS DENIED\n\nYou must create an account or login to purchase items.");
+            window.location.href = 'login.html';
+            return; // STOP HERE
         }
 
-        // 3. If Logged In, Open Modal
+        // 2. Open if Logged In
         document.getElementById('checkoutModal').setAttribute('open', true);
     }
 
