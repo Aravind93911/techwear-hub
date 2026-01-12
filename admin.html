@@ -112,7 +112,7 @@
 
         <div id="tab-users" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>User Database</h2>
+                <h2>User Database (Real-Time)</h2>
                 <button class="outline" onclick="loadUsers()">↻ Refresh List</button>
             </div>
             
@@ -159,7 +159,6 @@
     
     // --- LOGIN SYSTEM ---
     document.addEventListener('DOMContentLoaded', () => {
-        // Check Session
         if (localStorage.getItem('adminSession') === 'active') {
             showDashboard();
         }
@@ -181,11 +180,9 @@
     function showDashboard() {
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'grid';
-        
-        // Start tools
         initChart();
         startSimulation();
-        loadUsers(); // Load users immediately
+        loadUsers(); 
     }
 
     function adminLogout() {
@@ -193,46 +190,50 @@
         window.location.reload();
     }
 
-    // --- TAB SWITCHING ---
     function switchTab(tabName) {
-        // Hide all tabs
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
 
-        // Show selected
         const tab = document.getElementById('tab-' + tabName);
         const nav = document.getElementById('nav-' + tabName);
         
         if (tab) tab.classList.add('active');
         if (nav) nav.classList.add('active');
-
-        // Reload data if specific tab
         if(tabName === 'users') loadUsers();
     }
 
-    // --- USER MANAGEMENT LOGIC ---
+    // --- USER MANAGEMENT (REAL DATA) ---
     function loadUsers() {
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = ''; // Clear table
 
-        // 1. Get the Real User from simulated login
-        const realUser = localStorage.getItem('currentUser') || 'No_User_Logged_In';
-        
-        // 2. Mock Data (Simulated Database)
-        const mockUsers = [
-            { id: 101, user: "admin", role: "Administrator", status: "Active" },
-            { id: 102, user: realUser, role: "Customer", status: "Active" }, // The real one
-            { id: 103, user: "hacker_01", role: "Unknown", status: "Suspicious" },
-            { id: 104, user: "test_account", role: "Customer", status: "Active" }
+        // 1. Define the Admin (Always exists)
+        let allUsers = [
+            { id: 100, user: "admin", role: "Administrator", status: "Active" }
         ];
 
-        mockUsers.forEach(u => {
-            const row = document.createElement('tr');
-            
-            // Determine Color for Status
+        // 2. Fetch REAL Registered Users from LocalStorage
+        const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+
+        // 3. Add them to the list
+        registeredUsers.forEach((u, index) => {
+            allUsers.push({
+                id: 200 + index,
+                user: u.username,
+                role: "Customer",
+                status: "Active"
+            });
+        });
+
+        // 4. Add a Fake Hacker (For Demo purposes)
+        allUsers.push({ id: 666, user: "hacker_unknown", role: "Unverified", status: "Suspicious" });
+
+        // 5. Render to Table
+        allUsers.forEach(u => {
             let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
             if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
 
+            const row = document.createElement('tr');
             row.innerHTML = `
                 <td>#${u.id}</td>
                 <td><strong>${u.user}</strong></td>
@@ -254,9 +255,7 @@
             statusCell.innerText = "BANNED";
             statusCell.style.color = "#f85149";
             btn.innerText = "Unblock";
-            btn.setAttribute('disabled', 'true'); // Simulate permanent block
-            
-            // Increment threat counter
+            btn.setAttribute('disabled', 'true'); 
             blockedThreats++;
             document.getElementById('blockedReq').innerText = blockedThreats;
         }
@@ -290,11 +289,9 @@
 
     function startSimulation() {
         setInterval(() => {
-            // 1. Random Stats
-            totalRequests += Math.floor(Math.random() * 5);
+            totalRequests += Math.floor(Math.random() * 5) + 1;
             document.getElementById('totalReq').innerText = totalRequests;
             
-            // 2. Chart Update
             const time = new Date().toLocaleTimeString();
             trafficChart.data.labels.push(time);
             trafficChart.data.datasets[0].data.push(Math.floor(Math.random() * 50) + 10);
@@ -305,7 +302,7 @@
             }
             trafficChart.update();
 
-            // 3. Check for Real Attacks from Login Page
+            // CHECK FOR REAL ATTACKS
             let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
             if (realAttacks.length > 0) {
                 const attack = realAttacks.shift();
@@ -313,7 +310,7 @@
                 blockedThreats++;
                 document.getElementById('blockedReq').innerText = blockedThreats;
                 localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
-                alert("🚨 ALERT: New Attack Detected in Logs!"); // Notify Admin
+                alert("🚨 ALERT: Real SQL Injection Detected!");
             }
 
         }, 2000);
@@ -325,11 +322,12 @@
         row.innerHTML = `
             <td>${time}</td>
             <td>${ip}</td>
-            <td style="color:#ff7b72; font-family:monospace">${query}</td>
+            <td style="font-family:monospace; color: #8b949e">${query}</td>
             <td style="color:#f85149; font-weight:bold">${level}</td>
-            <td>${action}</td>
+            <td style="color:#f85149">${action}</td>
         `;
         tbody.prepend(row);
+        if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
     }
   </script>
 </body>
