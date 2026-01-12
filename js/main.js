@@ -1,5 +1,6 @@
 // js/main.js
-
+console.log("Main.js is LOADED successfully");
+alert("System Ready - JS Connected");
 // --- 1. PRODUCT DATABASE ---
 const products = [
     {
