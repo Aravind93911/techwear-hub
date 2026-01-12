@@ -29,7 +29,7 @@
     <ul><li><strong>TechWear Hub</strong></li></ul>
     <ul id="navLinks">
       <li><a href="index.html" role="button" class="outline contrast">Home</a></li>
-      <li><a href="shop.html">Shop</a></li>
+      <li><a href="#" onclick="protectShop(event)">Shop</a></li>
       <li><a href="login.html" id="loginLink">Login</a></li>
       <li><a href="cart.html">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
@@ -39,7 +39,7 @@
   <header class="hero">
     <h1>Next-Gen Wearables</h1>
     <p>Upgrade your lifestyle with premium smart tech.</p>
-    <a href="shop.html" role="button" class="contrast" style="font-size: 1.2rem; padding: 1rem 2rem;">Shop Now</a>
+    <a href="#" onclick="protectShop(event)" role="button" class="contrast" style="font-size: 1.2rem; padding: 1rem 2rem;">Shop Now</a>
   </header>
 
   <main class="container">
@@ -53,21 +53,21 @@
         <header><strong>Smart Watches</strong></header>
         <img src="https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80" alt="Watch">
         <p style="margin-top:1rem">Track your health with military-grade precision.</p>
-        <footer><a href="shop.html" role="button" class="outline">View Models</a></footer>
+        <footer><a href="#" onclick="protectShop(event)" role="button" class="outline">View Models</a></footer>
       </article>
 
       <article>
         <header><strong>Audio Gear</strong></header>
         <img src="https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80" alt="Audio">
         <p style="margin-top:1rem">Immersive sound with active noise cancellation.</p>
-        <footer><a href="shop.html" role="button" class="outline">Listen Now</a></footer>
+        <footer><a href="#" onclick="protectShop(event)" role="button" class="outline">Listen Now</a></footer>
       </article>
 
       <article>
         <header><strong>VR & Gaming</strong></header>
         <img src="https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80" alt="VR">
         <p style="margin-top:1rem">Step into the future with 4K virtual reality.</p>
-        <footer><a href="shop.html" role="button" class="outline">Dive In</a></footer>
+        <footer><a href="#" onclick="protectShop(event)" role="button" class="outline">Dive In</a></footer>
       </article>
     </div>
   </main>
@@ -77,6 +77,36 @@
     <small>© 2026 TechWear Hub</small>
   </footer>
 
-  <script src="js/main.js"></script>
+  <script>
+    // 1. UPDATE LOGIN LINK DYNAMICALLY
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = localStorage.getItem('currentUser');
+        const loginLink = document.getElementById('loginLink');
+        
+        if (user) {
+            // If logged in, change "Login" to "Profile"
+            loginLink.innerText = "Profile (" + user + ")";
+            loginLink.href = "profile.html";
+            loginLink.classList.add("contrast"); // Make it pop
+        }
+    });
+
+    // 2. THE SECURITY GUARD FUNCTION
+    function protectShop(event) {
+        event.preventDefault(); // Stop the link from opening
+        
+        const user = localStorage.getItem('currentUser');
+
+        if (user) {
+            // ALLOW ACCESS
+            window.location.href = 'shop.html';
+        } else {
+            // DENY ACCESS
+            if(confirm("🔒 MEMBERS ONLY AREA\n\nYou must be logged in to browse our exclusive products.\n\nClick OK to Login.")) {
+                window.location.href = 'login.html';
+            }
+        }
+    }
+  </script>
 </body>
 </html>
