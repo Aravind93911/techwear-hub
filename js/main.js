@@ -136,3 +136,46 @@ document.addEventListener('DOMContentLoaded', () => {
         link.href = 'profile.html';
     }
 });
+// js/main.js - Update this function
+
+function userLogin(event) {
+    event.preventDefault(); 
+    
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const userVal = usernameInput.value;
+    const passVal = passwordInput.value;
+
+    // --- 1. SIMULATED SQL INJECTION DETECTION ---
+    // List of common SQL attack patterns for simulation
+    const sqlPatterns = ["' OR '1'='1", "' OR 1=1", "UNION SELECT", "DROP TABLE", "--", "admin' --"];
+    
+    // Check if the input contains any of these patterns
+    const isAttack = sqlPatterns.some(pattern => 
+        userVal.includes(pattern) || passVal.includes(pattern)
+    );
+
+    if (isAttack) {
+        alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!\nRequest has been blocked and logged.");
+        
+        // Save this attack to LocalStorage so Admin Panel can see it
+        let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        attackLogs.push({
+            time: new Date().toLocaleTimeString(),
+            ip: "192.168.1.105 (You)", // Mock IP
+            query: userVal + " / " + passVal,
+            type: "SQL Injection"
+        });
+        localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
+        
+        return; // Stop the login
+    }
+
+    // --- 2. NORMAL LOGIN LOGIC ---
+    if (userVal) {
+        localStorage.setItem('currentUser', userVal);
+        window.location.href = 'profile.html'; 
+    } else {
+        alert("Please enter a username");
+    }
+}
