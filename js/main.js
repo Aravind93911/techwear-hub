@@ -6,7 +6,8 @@ const products = [
         id: 1,
         name: "Smartwatch Pro",
         price: 199.00,
-        image: "images/smartwatch.jpg", // Make sure you have this image
+        // CHANGED: Using online URL so it works immediately
+        image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80",
         desc: "OLED display, ECG monitoring, and 3-day battery life in a sleek aerospace aluminum body.",
         specs: ["Water Resistance: 50m", "Battery: 72 Hours", "Sensors: SpO2, Heart Rate", "Connectivity: BT 5.0"]
     },
@@ -14,7 +15,7 @@ const products = [
         id: 2,
         name: "Sonic Buds",
         price: 89.99,
-        image: "images/earbuds.jpg",
+        image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
         desc: "Active Noise Cancellation (ANC) with transparency mode and spatial audio support.",
         specs: ["Battery: 24 Hours (with case)", "Driver: 11mm Dynamic", "Resistance: IPX4", "Charging: Wireless"]
     },
@@ -22,16 +23,14 @@ const products = [
         id: 3,
         name: "Fitness Band X",
         price: 49.50,
-        image: "images/fitness-tracker.jpg",
+        image: "https://images.unsplash.com/photo-1557935728-95d66cb15197?auto=format&fit=crop&w=600&q=80",
         desc: "Ultra-lightweight design. Tracks steps, sleep, and heart rate. Waterproof up to 50m.",
         specs: ["Weight: 15g", "Screen: AMOLED", "Modes: 30+ Sports", "Battery: 14 Days"]
     },
-    // --- NEW PRODUCTS ---
     {
         id: 4,
         name: "VR Headset Horizon",
         price: 299.00,
-        // Use a placeholder if you don't have the image yet
         image: "https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80",
         desc: "Immersive 4K virtual reality experience with 110-degree field of view.",
         specs: ["Resolution: 4K", "Refresh Rate: 90Hz", "Tracking: 6DoF", "Controllers: Included"]
@@ -54,12 +53,12 @@ const products = [
     }
 ];
 
-// --- 2. SHOP PAGE LOGIC (Auto-Generate Grid) ---
+// --- 2. SHOP PAGE LOGIC ---
 function loadShop() {
     const grid = document.getElementById('productGrid');
-    if (!grid) return; // Stop if we aren't on the shop page
+    if (!grid) return;
 
-    grid.innerHTML = ''; // Clear loading text
+    grid.innerHTML = '';
 
     products.forEach(product => {
         const card = `
@@ -70,8 +69,8 @@ function loadShop() {
                    </a>
                 </div>
                 <div class="product-details">
-                    <div class="product-title">${product.name}</div>
-                    <span class="product-price">$${product.price.toFixed(2)}</span>
+                    <div class="product-title" style="font-size:1.2rem; font-weight:bold; margin-bottom:0.5rem;">${product.name}</div>
+                    <span class="product-price" style="color:#00bcd4; font-size:1.1rem;">$${product.price.toFixed(2)}</span>
                     <div class="grid" style="gap:10px; margin-top:1rem;">
                         <a href="product.html?id=${product.id}" role="button" class="outline" style="font-size:0.8rem">View Details</a>
                         <button onclick="addToCart(${product.id})" style="font-size:0.8rem">Add to Cart</button>
@@ -85,11 +84,8 @@ function loadShop() {
 
 // --- 3. PRODUCT DETAIL PAGE LOGIC ---
 function loadProductDetails() {
-    // Get ID from URL (e.g., product.html?id=2)
     const params = new URLSearchParams(window.location.search);
     const productId = parseInt(params.get('id'));
-
-    // Find product in our "Database"
     const product = products.find(p => p.id === productId);
 
     if (product) {
@@ -98,12 +94,10 @@ function loadProductDetails() {
         document.getElementById('detailPrice').innerText = `$${product.price.toFixed(2)}`;
         document.getElementById('detailDesc').innerText = product.desc;
         
-        // Update Buy Button
         document.getElementById('detailAddBtn').onclick = function() {
             addToCart(product.id);
         };
 
-        // Fill Specs List
         const specsList = document.getElementById('detailSpecs');
         specsList.innerHTML = '';
         product.specs.forEach(spec => {
@@ -114,11 +108,9 @@ function loadProductDetails() {
     }
 }
 
-// --- 4. CART SYSTEM (Updated to look up ID) ---
+// --- 4. CART SYSTEM ---
 function addToCart(id) {
     let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
-    
-    // Find full details from our database using ID
     const product = products.find(p => p.id === id);
     
     if(product) {
@@ -130,11 +122,17 @@ function addToCart(id) {
 
 // --- 5. INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check which page we are on
     if (document.getElementById('productGrid')) {
         loadShop();
     }
     if (document.getElementById('detailName')) {
         loadProductDetails();
+    }
+    // Profile Logic Check
+    const user = localStorage.getItem('currentUser');
+    if(user && document.getElementById('loginLink')) {
+        const link = document.getElementById('loginLink');
+        link.textContent = 'Profile';
+        link.href = 'profile.html';
     }
 });
