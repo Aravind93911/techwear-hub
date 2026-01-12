@@ -112,9 +112,7 @@
                 <button id="refreshBtn" class="outline" onclick="manualRefresh()">↻ Refresh List</button>
             </div>
             <table role="grid">
-                <thead>
-                    <tr><th>ID</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr>
-                </thead>
+                <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
                 <tbody id="userTableBody"></tbody>
             </table>
             <p id="emptyMsg" style="text-align:center; color:#666; display:none; margin-top:2rem">No users found.</p>
@@ -137,7 +135,7 @@
             <div class="stats-grid" style="margin-top: 2rem;">
                 <div class="stat-card">
                     <div style="color: #8b949e;">Training Samples</div>
-                    <div class="stat-number">15,402</div>
+                    <div class="stat-number" id="sampleCount">15,402</div>
                 </div>
                 <div class="stat-card">
                     <div style="color: #2ea043;">Precision</div>
@@ -148,6 +146,24 @@
                     <div class="stat-number">0.1%</div>
                 </div>
             </div>
+
+            <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
+                <header><strong>Add New Training Data</strong></header>
+                <div class="grid">
+                    <div>
+                        <label for="newQuery">Attack / Query Pattern</label>
+                        <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
+                    </div>
+                    <div>
+                        <label for="newLabel">Classification</label>
+                        <select id="newLabel">
+                            <option value="1">Malicious (Attack)</option>
+                            <option value="0">Safe (Normal)</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="addNewData()" class="secondary outline" style="width: auto;">+ Add to Dataset</button>
+            </article>
 
             <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
                 <header><strong>Model Retraining</strong></header>
@@ -163,7 +179,7 @@
             <h4 style="margin-top: 2rem;">Training Dataset (Preview)</h4>
             <table role="grid">
                 <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
-                <tbody>
+                <tbody id="mlTableBody">
                     <tr><td>Normal</td><td style="font-family:monospace">SELECT * FROM users WHERE id = 5</td><td style="color:#2ea043">Safe (0)</td></tr>
                     <tr><td>Attack</td><td style="font-family:monospace">' OR 1=1 --</td><td style="color:#f85149">Malicious (1)</td></tr>
                     <tr><td>Attack</td><td style="font-family:monospace">UNION SELECT user, pass FROM admins</td><td style="color:#f85149">Malicious (1)</td></tr>
@@ -223,6 +239,44 @@
         if(tabName === 'users') loadUsers();
     }
 
+    // --- NEW: ADD DATA FUNCTION ---
+    function addNewData() {
+        const queryInput = document.getElementById('newQuery');
+        const labelSelect = document.getElementById('newLabel');
+        const table = document.getElementById('mlTableBody');
+        const countDisplay = document.getElementById('sampleCount');
+
+        if(queryInput.value === "") {
+            alert("Please enter a query pattern.");
+            return;
+        }
+
+        // 1. Determine Style
+        const isAttack = labelSelect.value === "1";
+        const typeText = isAttack ? "Attack" : "Normal";
+        const labelText = isAttack ? "Malicious (1)" : "Safe (0)";
+        const labelColor = isAttack ? "#f85149" : "#2ea043";
+
+        // 2. Add Row
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${typeText}</td>
+            <td style="font-family:monospace">${queryInput.value}</td>
+            <td style="color:${labelColor}">${labelText}</td>
+        `;
+        
+        // Add to TOP of table
+        table.prepend(row);
+
+        // 3. Update Count
+        let currentCount = parseInt(countDisplay.innerText.replace(/,/g, ''));
+        countDisplay.innerText = (currentCount + 1).toLocaleString();
+
+        // 4. Clear Input
+        queryInput.value = "";
+        alert("✅ Data added to training set. Don't forget to Retrain Model!");
+    }
+
     // --- ML TRAINING SIMULATION ---
     function trainModel() {
         const btn = document.getElementById('trainBtn');
@@ -238,7 +292,7 @@
         const interval = setInterval(() => {
             if (width >= 100) {
                 clearInterval(interval);
-                text.innerText = "Training Complete! Model Updated (v2.2)";
+                text.innerText = "Training Complete! Model Updated (v2.3)";
                 btn.innerText = "Model Up to Date";
                 setTimeout(() => {
                     container.style.display = 'none';
