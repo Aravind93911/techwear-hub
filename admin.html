@@ -5,15 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Security Operations Center</title>
   
-  <script>
-    // const isOwner = localStorage.getItem('site_owner_access');
-    // if (isOwner !== 'granted_secure_8829') {
-    //    // alert("⛔ ACCESS DENIED");
-    //    // window.location.href = 'index.html'; 
-    // }
-    // (I commented this out so you don't get locked out while testing. Uncomment to enable security.)
-  </script>
-
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -53,6 +44,10 @@
     .status-active { color: #2ea043; font-weight: bold; }
     .status-banned { color: #f85149; font-weight: bold; }
 
+    /* ML Training Bar */
+    .progress-container { width: 100%; background-color: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
+    .progress-bar { width: 0%; height: 20px; background-color: #2ea043; border-radius: 10px; transition: width 0.5s; }
+
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
@@ -79,6 +74,7 @@
             <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
             <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
             <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
+            <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Model Training</a>
         </nav>
 
         <div style="margin-top: auto;">
@@ -101,8 +97,8 @@
                     <div class="stat-number" id="blockedReq">0</div>
                 </div>
                 <div class="stat-card">
-                    <div style="color: #2ea043;">System Status</div>
-                    <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">SECURE</div>
+                    <div style="color: #2ea043;">AI Confidence</div>
+                    <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
                 </div>
             </div>
             <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
@@ -112,22 +108,14 @@
 
         <div id="tab-users" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>User Database (Real-Time)</h2>
+                <h2>User Database</h2>
                 <button id="refreshBtn" class="outline" onclick="manualRefresh()">↻ Refresh List</button>
             </div>
-            
             <table role="grid">
                 <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Action</th>
-                    </tr>
+                    <tr><th>ID</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr>
                 </thead>
-                <tbody id="userTableBody">
-                    </tbody>
+                <tbody id="userTableBody"></tbody>
             </table>
             <p id="emptyMsg" style="text-align:center; color:#666; display:none; margin-top:2rem">No users found.</p>
         </div>
@@ -135,17 +123,52 @@
         <div id="tab-logs" class="tab-content">
             <h2>Security Logs</h2>
             <table role="grid">
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>IP Address</th>
-                        <th>Query / Payload</th>
-                        <th>Threat Level</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="logBody">
-                    </tbody>
+                <thead><tr><th>Time</th><th>IP Address</th><th>Query / Payload</th><th>Threat Level</th><th>Action</th></tr></thead>
+                <tbody id="logBody"></tbody>
+            </table>
+        </div>
+
+        <div id="tab-ml" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>SQL Injection Detection Model (v2.1)</h2>
+                <div class="status-badge" style="background:#a371f7">● Active</div>
+            </div>
+
+            <div class="stats-grid" style="margin-top: 2rem;">
+                <div class="stat-card">
+                    <div style="color: #8b949e;">Training Samples</div>
+                    <div class="stat-number">15,402</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #2ea043;">Precision</div>
+                    <div class="stat-number">98.2%</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #f85149;">False Positives</div>
+                    <div class="stat-number">0.1%</div>
+                </div>
+            </div>
+
+            <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
+                <header><strong>Model Retraining</strong></header>
+                <p>Retrain the classifier using the latest captured attack vectors.</p>
+                <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
+                
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <small id="progressText" style="display:block; text-align:center; margin-top:5px; color:#2ea043">Initializing...</small>
+                </div>
+            </article>
+
+            <h4 style="margin-top: 2rem;">Training Dataset (Preview)</h4>
+            <table role="grid">
+                <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
+                <tbody>
+                    <tr><td>Normal</td><td style="font-family:monospace">SELECT * FROM users WHERE id = 5</td><td style="color:#2ea043">Safe (0)</td></tr>
+                    <tr><td>Attack</td><td style="font-family:monospace">' OR 1=1 --</td><td style="color:#f85149">Malicious (1)</td></tr>
+                    <tr><td>Attack</td><td style="font-family:monospace">UNION SELECT user, pass FROM admins</td><td style="color:#f85149">Malicious (1)</td></tr>
+                    <tr><td>Normal</td><td style="font-family:monospace">SELECT name FROM products WHERE category = 'watch'</td><td style="color:#2ea043">Safe (0)</td></tr>
+                </tbody>
             </table>
         </div>
 
@@ -200,25 +223,50 @@
         if(tabName === 'users') loadUsers();
     }
 
-    // --- UPDATED USER REFRESH LOGIC ---
+    // --- ML TRAINING SIMULATION ---
+    function trainModel() {
+        const btn = document.getElementById('trainBtn');
+        const container = document.getElementById('progressContainer');
+        const bar = document.getElementById('progressBar');
+        const text = document.getElementById('progressText');
+
+        btn.disabled = true;
+        btn.innerText = "Training in Progress...";
+        container.style.display = 'block';
+        
+        let width = 0;
+        const interval = setInterval(() => {
+            if (width >= 100) {
+                clearInterval(interval);
+                text.innerText = "Training Complete! Model Updated (v2.2)";
+                btn.innerText = "Model Up to Date";
+                setTimeout(() => {
+                    container.style.display = 'none';
+                    btn.disabled = false;
+                    btn.innerText = "Start Training";
+                    alert("✅ AI Model successfully retrained with new dataset.");
+                }, 2000);
+            } else {
+                width++;
+                bar.style.width = width + '%';
+                if(width < 30) text.innerText = "Vectorizing SQL Queries...";
+                else if(width < 70) text.innerText = "Training Random Forest Classifier...";
+                else text.innerText = "Validating Accuracy...";
+            }
+        }, 50); 
+    }
+
+    // --- REFRESH LOGIC ---
     function manualRefresh() {
         const btn = document.getElementById('refreshBtn');
         const originalText = btn.innerText;
-
-        // 1. Show Loading State
         btn.setAttribute('aria-busy', 'true');
         btn.innerText = "Scanning...";
-        
-        // 2. Clear Table Briefly (Visual Feedback)
         document.getElementById('userTableBody').innerHTML = '';
-
-        // 3. Wait 500ms then Load Data
         setTimeout(() => {
             loadUsers();
             btn.removeAttribute('aria-busy');
             btn.innerText = "✅ Updated";
-            
-            // 4. Reset Button Text
             setTimeout(() => { btn.innerText = originalText; }, 1000);
         }, 500);
     }
@@ -226,26 +274,13 @@
     function loadUsers() {
         const tbody = document.getElementById('userTableBody');
         tbody.innerHTML = ''; 
-
-        // 1. Admin
         let allUsers = [{ id: 100, user: "admin", role: "Administrator", status: "Active" }];
-
-        // 2. REAL Users from Registration Page
         const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
-
         registeredUsers.forEach((u, index) => {
-            allUsers.push({
-                id: 201 + index,
-                user: u.username,
-                role: "Customer",
-                status: "Active"
-            });
+            allUsers.push({ id: 201 + index, user: u.username, role: "Customer", status: "Active" });
         });
-
-        // 3. Mock Hacker
         allUsers.push({ id: 666, user: "hacker_unknown", role: "Unverified", status: "Suspicious" });
 
-        // 4. Render
         if(allUsers.length === 0) {
             document.getElementById('emptyMsg').style.display = 'block';
         } else {
@@ -253,18 +288,8 @@
             allUsers.forEach(u => {
                 let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
                 if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
-
                 const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>#${u.id}</td>
-                    <td><strong>${u.user}</strong></td>
-                    <td>${u.role}</td>
-                    <td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td>
-                    <td>
-                        ${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : 
-                          `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}
-                    </td>
-                `;
+                row.innerHTML = `<td>#${u.id}</td><td><strong>${u.user}</strong></td><td>${u.role}</td><td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td><td>${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}</td>`;
                 tbody.appendChild(row);
             });
         }
@@ -273,9 +298,8 @@
     function blockUser(btn) {
         if(confirm("Are you sure you want to blacklist this IP/User?")) {
             const row = btn.closest('tr');
-            const statusCell = row.cells[3];
-            statusCell.innerText = "BANNED";
-            statusCell.style.color = "#f85149";
+            row.cells[3].innerText = "BANNED";
+            row.cells[3].style.color = "#f85149";
             btn.innerText = "Unblock";
             btn.setAttribute('disabled', 'true'); 
             blockedThreats++;
@@ -287,24 +311,8 @@
         const ctx = document.getElementById('trafficChart').getContext('2d');
         trafficChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels: [],
-                datasets: [{
-                    label: 'Traffic Volume',
-                    borderColor: '#2ea043',
-                    backgroundColor: 'rgba(46, 160, 67, 0.1)',
-                    data: [],
-                    tension: 0.4,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { x: { display: false }, y: { display: true } },
-                plugins: { legend: { display: false } },
-                animation: { duration: 0 }
-            }
+            data: { labels: [], datasets: [{ label: 'Traffic', borderColor: '#2ea043', backgroundColor: 'rgba(46, 160, 67, 0.1)', data: [], tension: 0.4, fill: true }] },
+            options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: true } }, plugins: { legend: { display: false } }, animation: { duration: 0 } }
         });
     }
 
@@ -312,17 +320,11 @@
         setInterval(() => {
             totalRequests += Math.floor(Math.random() * 5) + 1;
             document.getElementById('totalReq').innerText = totalRequests;
-            
             const time = new Date().toLocaleTimeString();
             trafficChart.data.labels.push(time);
             trafficChart.data.datasets[0].data.push(Math.floor(Math.random() * 50) + 10);
-            
-            if(trafficChart.data.labels.length > 20) {
-                trafficChart.data.labels.shift();
-                trafficChart.data.datasets[0].data.shift();
-            }
+            if(trafficChart.data.labels.length > 20) { trafficChart.data.labels.shift(); trafficChart.data.datasets[0].data.shift(); }
             trafficChart.update();
-
             let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
             if (realAttacks.length > 0) {
                 const attack = realAttacks.shift();
@@ -332,20 +334,13 @@
                 localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
                 alert("🚨 ALERT: Real SQL Injection Detected!");
             }
-
         }, 2000);
     }
 
     function addLog(time, ip, query, level, action) {
         const tbody = document.getElementById('logBody');
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${time}</td>
-            <td>${ip}</td>
-            <td style="font-family:monospace; color: #8b949e">${query}</td>
-            <td style="color:#f85149; font-weight:bold">${level}</td>
-            <td style="color:#f85149">${action}</td>
-        `;
+        row.innerHTML = `<td>${time}</td><td>${ip}</td><td style="font-family:monospace; color: #8b949e">${query}</td><td style="color:#f85149; font-weight:bold">${level}</td><td style="color:#f85149">${action}</td>`;
         tbody.prepend(row);
         if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
     }
