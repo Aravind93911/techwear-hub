@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
   
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+  
   <style>
     body > main {
       background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80');
@@ -53,17 +55,17 @@
 
       <form onsubmit="userLogin(event)">
         <label for="username">Username / Email</label>
-        <input type="text" id="username" placeholder="Enter Username" required />
+        <input type="text" id="username" name="username" placeholder="Enter Username" required />
         
         <label for="password">Password</label>
-        <input type="password" id="password" placeholder="Enter Password" required />
+        <input type="password" id="password" name="password" placeholder="Enter Password" required />
         
         <div class="grid" style="font-size: 0.8rem; margin-bottom: 1rem; align-items: center;">
             <label><input type="checkbox"> Remember me</label>
             <a href="#" style="text-align: right; color: var(--primary);">Forgot password?</a>
         </div>
 
-        <button type="submit" class="contrast">Sign In</button>
+        <button type="submit" id="loginBtn" class="contrast">Sign In</button>
       </form>
 
       <div style="text-align: center; margin-top: 1.5rem; font-size: 0.85rem; color: var(--muted-color);">
@@ -73,50 +75,101 @@
   </main>
 
   <script>
+    // --- CONFIGURE EMAILJS ---
+    (function(){
+       // 1. PASTE YOUR PUBLIC KEY HERE
+       emailjs.init("YOUR_PUBLIC_KEY_HERE"); 
+    })();
+
+    // 2. PASTE YOUR SERVICE & TEMPLATE IDs HERE
+    const SERVICE_ID = "YOUR_SERVICE_ID";
+    const TEMPLATE_ID = "YOUR_TEMPLATE_ID";
+    const ADMIN_EMAIL = "your_own_email@gmail.com"; // Where Admin alerts go
+
     function userLogin(event) {
         event.preventDefault(); 
         
         const userVal = document.getElementById('username').value;
         const passVal = document.getElementById('password').value;
+        const btn = document.getElementById('loginBtn');
 
-        // 1. SQL INJECTION CHECK (For Project Demo)
+        // --- A. SQL INJECTION CHECK (Send to Admin) ---
         const cleanUser = userVal.toUpperCase();
         const sqlPatterns = ["' OR 1=1", "' OR '1'='1", "UNION SELECT", "DROP TABLE", "--"];
         
         if (sqlPatterns.some(pattern => cleanUser.includes(pattern))) {
             alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!");
+            
+            // Log locally
             let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
-            attackLogs.push({
-                time: new Date().toLocaleTimeString(),
-                ip: "192.168.1.105 (You)",
-                query: userVal, 
-                type: "SQL Injection"
-            });
+            attackLogs.push({ time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query: userVal, type: "SQL Injection" });
             localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
-            return; 
+
+            // Send Email to ADMIN
+            sendEmail(ADMIN_EMAIL, "🚨 SQL Injection Alert", `Attack detected using query: ${userVal}`);
+            return;
         }
 
-        // 2. CHECK LOGIN CREDENTIALS
-        
-        // A. Admin backdoor
+        // --- B. AUTHENTICATION CHECK ---
+
+        // 1. Check Admin
         if (userVal === 'admin' && passVal === 'admin123') {
             localStorage.setItem('currentUser', 'Administrator');
             window.location.href = 'profile.html';
             return;
         }
 
-        // B. Check Registered Users
+        // 2. Check Registered Users
         let userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
-        const validUser = userDB.find(u => u.username === userVal && u.password === passVal);
+        
+        // Find if the username exists at all
+        const targetUser = userDB.find(u => u.username === userVal);
 
-        if (validUser) {
-            // SUCCESS!
-            localStorage.setItem('currentUser', validUser.username);
-            window.location.href = 'profile.html'; 
+        if (targetUser) {
+            // User exists, check password
+            if (targetUser.password === passVal) {
+                // SUCCESS
+                localStorage.setItem('currentUser', targetUser.username);
+                window.location.href = 'profile.html'; 
+            } else {
+                // FAILED: Wrong Password -> ALERT THE USER!
+                alert("❌ Login Failed: Incorrect Password.");
+                
+                console.log(`Sending security alert to: ${targetUser.email}`);
+                
+                // Send Email to THE USER (not Admin)
+                sendEmail(
+                    targetUser.email, 
+                    "⚠️ Security Alert: Failed Login Attempt", 
+                    `Hello ${targetUser.username}, someone tried to access your account with an incorrect password.`
+                );
+            }
         } else {
-            // FAILED
-            alert("❌ Login Failed: Incorrect Username or Password.\n(Did you create an account?)");
+            // User does not exist
+            alert("❌ Login Failed: Username not found.");
         }
+    }
+
+    // --- REUSABLE EMAIL FUNCTION ---
+    function sendEmail(toEmail, subject, message) {
+        const btn = document.getElementById('loginBtn');
+        btn.innerText = "Sending Alert...";
+        
+        const params = {
+            to_email: toEmail,  // This matches {{to_email}} in your template
+            subject: subject,   // You need {{subject}} in your template subject line
+            message: message,   // You need {{message}} in your template body
+            ip: "192.168.1.105 (Simulated)"
+        };
+
+        emailjs.send(SERVICE_ID, TEMPLATE_ID, params)
+            .then(function() {
+                console.log("Email sent successfully to " + toEmail);
+                btn.innerText = "Sign In";
+            }, function(error) {
+                console.log("Email failed", error);
+                btn.innerText = "Sign In";
+            });
     }
   </script>
 
