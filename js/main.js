@@ -179,3 +179,29 @@ function userLogin(event) {
         alert("Please enter a username");
     }
 }
+// Add/Check this at the bottom of js/main.js
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- 1. USER SESSION CHECK ---
+    const currentUser = localStorage.getItem('currentUser');
+    const loginLink = document.getElementById('loginLink');
+
+    // If user is logged in...
+    if (currentUser) {
+        
+        // Update the "Login" button to say "Profile"
+        if (loginLink) {
+            loginLink.textContent = 'Profile';
+            loginLink.href = 'profile.html';
+        }
+
+        // If they try to visit the Login page, force them to Profile
+        // (Prevents logging in twice)
+        if (window.location.pathname.includes('login.html')) {
+            window.location.href = 'profile.html';
+        }
+    }
+
+    // ... Rest of your load functions (loadShop, loadProductDetails) ...
+});
