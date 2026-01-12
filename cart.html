@@ -4,8 +4,45 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Cart - TechWear Hub</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  
+  <style>
+    /* Cart Styling Updates */
+    h2, h3, h4, h5 { color: #e0e0e0 !important; }
+
+    .cart-item {
+        background-color: var(--card-background);
+        padding: 1.5rem;
+        border-bottom: 1px solid #30363d;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        border-radius: 6px;
+    }
+    .cart-item span:first-child { font-weight: bold; font-size: 1.1rem; color: white; }
+    .cart-item span:nth-child(2) { color: #00bcd4; font-weight: bold; }
+
+    .cart-total {
+        margin-top: 2rem;
+        font-size: 1.8rem;
+        font-weight: 800;
+        text-align: right;
+        color: #00bcd4;
+    }
+    
+    /* Input Visibility Fixes */
+    dialog article { background-color: var(--card-background); color: white; border: 1px solid #444; }
+    textarea, input, select { background-color: #0d1117 !important; color: white !important; border-color: #30363d !important; }
+    
+    .phone-group { display: flex; align-items: center; }
+    .phone-prefix {
+        background-color: #21262d; border: 1px solid #30363d; color: #ccc;
+        padding: 0.75rem; border-radius: 4px 0 0 4px; font-weight: bold;
+    }
+  </style>
 </head>
 <body>
 
@@ -14,8 +51,8 @@
     <ul id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
-      <li><a href="profile.html" id="loginLink">Login</a></li>
-      <li><a href="cart.html" role="button" class="outline">Cart</a></li>
+      <li><a href="login.html">Login</a></li>
+      <li><a href="cart.html" role="button" class="outline contrast">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
@@ -27,7 +64,7 @@
         <p>Loading cart...</p>
     </section>
 
-    <div class="cart-total" id="cartTotal"></div>
+    <div class="cart-total" id="cartTotal">Total: ₹0</div>
 
     <hr style="border-color: #333;">
     
@@ -75,16 +112,14 @@
 
         <footer>
           <button type="button" class="secondary" onclick="closeCheckout()">Cancel</button>
-          <button type="submit" id="payBtn">Pay & Place Order</button>
+          <button type="submit" id="payBtn">Pay <span id="payAmount"></span></button>
         </footer>
       </form>
     </article>
   </dialog>
 
-  <script src="js/main.js"></script>
-  
   <script>
-    // Logic to load cart
+    // --- LOAD CART ---
     document.addEventListener('DOMContentLoaded', () => {
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
@@ -92,7 +127,8 @@
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
 
         if (cart.length === 0) {
-            cartList.innerHTML = '<p>Your cart is empty.</p>';
+            cartList.innerHTML = '<p style="color:#888">Your cart is empty. <a href="shop.html">Go Shop!</a></p>';
+            cartTotal.style.display = 'none';
             return;
         }
 
@@ -103,17 +139,27 @@
             let price = parseFloat(product.price) || 0; 
             total += price;
 
+            // Format price neatly
+            let priceString = price.toLocaleString('en-IN');
+
             html += `
                 <div class="cart-item">
                     <span>${product.name}</span>
-                    <span style="color: #00bcd4; font-weight:bold;">$${price.toFixed(2)}</span>
-                    <a href="#" onclick="removeItem(${index})" style="color:#f44336; margin-left:1rem; font-size:0.9rem">Remove</a>
+                    <span>₹${priceString}</span>
+                    <a href="#" onclick="removeItem(${index})" style="color:#f44336; margin-left:1rem; font-size:0.9rem; text-decoration:none">Remove</a>
                 </div>
             `;
         });
 
         cartList.innerHTML = html;
-        cartTotal.innerText = `Total: $${total.toFixed(2)}`;
+        
+        // Update Total Displays
+        const totalString = "₹" + total.toLocaleString('en-IN');
+        cartTotal.innerText = `Total: ${totalString}`;
+        
+        // Update Button Text inside Modal
+        const payBtnText = document.getElementById('payAmount');
+        if(payBtnText) payBtnText.innerText = totalString;
     });
 
     function removeItem(index) {
@@ -122,29 +168,38 @@
         localStorage.setItem('techWearCart', JSON.stringify(cart));
         window.location.reload();
     }
-    
+
     function clearCart() {
-        localStorage.removeItem('techWearCart');
-        window.location.reload();
+        if(confirm("Clear your cart?")) {
+            localStorage.removeItem('techWearCart');
+            window.location.reload();
+        }
     }
 
-    // Modal Logic
+    // --- CHECKOUT LOGIC ---
     function openCheckout() {
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
-        if (cart.length > 0) document.getElementById('checkoutModal').setAttribute('open', true);
-        else alert("Cart is empty!");
+        if (cart.length === 0) {
+            alert("Your cart is empty!");
+            return;
+        }
+        document.getElementById('checkoutModal').setAttribute('open', true);
     }
+
     function closeCheckout() {
         document.getElementById('checkoutModal').removeAttribute('open');
     }
+
     function processOrder(event) {
         event.preventDefault();
-        const btn = document.getElementById('payBtn');
-        btn.setAttribute('aria-busy', 'true');
-        btn.innerText = "Processing...";
+        const payBtn = document.getElementById('payBtn');
+        payBtn.setAttribute('aria-busy', 'true');
+        payBtn.innerText = 'Processing Payment...';
+
         setTimeout(() => {
-            alert("Order Placed Successfully!");
+            alert("Payment Successful! Your order has been placed.");
             localStorage.removeItem('techWearCart');
+            closeCheckout();
             window.location.href = 'profile.html';
         }, 2000);
     }
