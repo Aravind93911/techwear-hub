@@ -4,13 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shop - TechWear Hub</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  
   <style>
-    /* Ensure grid looks good with many items */
-    .image-wrapper img { height: 250px; object-fit: cover; width: 100%; transition: transform 0.3s; }
-    .image-wrapper:hover img { transform: scale(1.05); }
-    .image-wrapper { overflow: hidden; border-radius: 4px; }
+    /* Grid Layout Fix */
+    #productGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    
+    /* Image Styling */
+    .image-wrapper {
+        height: 250px;
+        overflow: hidden;
+        border-radius: 8px 8px 0 0;
+    }
+    .image-wrapper img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s;
+    }
+    .image-wrapper:hover img {
+        transform: scale(1.05);
+    }
+
+    /* Card Styling */
+    .product-card {
+        background: var(--card-background);
+        border: 1px solid #30363d;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .product-details {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
   </style>
 </head>
 <body>
@@ -19,22 +57,109 @@
     <ul><li><strong>TechWear Hub</strong></li></ul>
     <ul id="navLinks">
       <li><a href="index.html">Home</a></li>
-      <li><a href="shop.html" role="button" class="outline">Shop</a></li>
-      <li><a href="profile.html">Login</a></li>
+      <li><a href="shop.html" role="button" class="outline contrast">Shop</a></li>
+      <li><a href="login.html">Login</a></li>
       <li><a href="cart.html">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
     </ul>
   </nav>
 
   <main class="container">
-    <h2 style="margin-bottom:2rem; border-bottom:1px solid #333; padding-bottom:1rem;">All Products</h2>
+    <h2 style="border-bottom:1px solid #333; padding-bottom:1rem;">All Products</h2>
     
-    <div class="grid" id="productGrid">
-      <p>Loading products...</p>
+    <div id="productGrid">
+      <p aria-busy="true">Loading products...</p>
     </div>
-
   </main>
 
-  <script src="js/main.js"></script>
+  <script>
+    // 1. THE PRODUCT DATA
+    const products = [
+        {
+            id: 1,
+            name: "Smartwatch Pro",
+            price: 199.00,
+            image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80",
+            desc: "OLED display, ECG monitoring, and 3-day battery life."
+        },
+        {
+            id: 2,
+            name: "Sonic Buds",
+            price: 89.99,
+            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
+            desc: "Active Noise Cancellation (ANC) with spatial audio support."
+        },
+        {
+            id: 3,
+            name: "Fitness Band X",
+            price: 49.50,
+            image: "https://images.unsplash.com/photo-1557935728-95d66cb15197?auto=format&fit=crop&w=600&q=80",
+            desc: "Tracks steps, sleep, and heart rate. Waterproof up to 50m."
+        },
+        {
+            id: 4,
+            name: "VR Headset Horizon",
+            price: 299.00,
+            image: "https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80",
+            desc: "Immersive 4K virtual reality experience."
+        },
+        {
+            id: 5,
+            name: "Pro Gaming Mouse",
+            price: 59.99,
+            image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80",
+            desc: "High-precision 25K sensor with customizable RGB."
+        },
+        {
+            id: 6,
+            name: "Mech Keyboard K1",
+            price: 129.00,
+            image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80",
+            desc: "Tactile mechanical switches with aluminum frame."
+        }
+    ];
+
+    // 2. THE LOADING LOGIC
+    document.addEventListener('DOMContentLoaded', () => {
+        const grid = document.getElementById('productGrid');
+        
+        // Clear the "Loading..." text
+        grid.innerHTML = '';
+
+        products.forEach(product => {
+            const card = `
+                <article class="product-card">
+                    <div class="image-wrapper">
+                       <a href="product.html?id=${product.id}">
+                           <img src="${product.image}" alt="${product.name}">
+                       </a>
+                    </div>
+                    <div class="product-details">
+                        <div>
+                            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:0.5rem;">${product.name}</div>
+                            <span style="color:#00bcd4; font-size:1.1rem; font-weight:bold">$${product.price.toFixed(2)}</span>
+                        </div>
+                        <div class="grid" style="gap:10px; margin-top:1.5rem;">
+                            <a href="product.html?id=${product.id}" role="button" class="outline" style="width:100%">Details</a>
+                            <button onclick="addToCart(${product.id})" style="width:100%">Add</button>
+                        </div>
+                    </div>
+                </article>
+            `;
+            grid.innerHTML += card;
+        });
+    });
+
+    // 3. CART FUNCTION
+    function addToCart(id) {
+        let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
+        const product = products.find(p => p.id === id);
+        if(product) {
+            cart.push(product);
+            localStorage.setItem('techWearCart', JSON.stringify(cart));
+            alert(`${product.name} added to cart!`);
+        }
+    }
+  </script>
 </body>
 </html>
