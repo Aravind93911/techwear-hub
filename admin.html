@@ -1,201 +1,336 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Admin - Security Operations Center</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   <style>
-    /* --- SECURITY OPS THEME --- */
-    :root {
-      --primary: #c62828;
-      --background-color: #0f1115;
-      --card-bg: #161b22;
-      --text-mono: 'Courier New', monospace;
-    }
-    body { font-family: system-ui, sans-serif; }
-
-    /* LAYOUT */
-    .dashboard-grid { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+    /* Admin Specific Styling */
+    body { min-height: 100vh; display: flex; flex-direction: column; }
     
-    /* SIDEBAR */
-    .sidebar { background: #0d1117; border-right: 1px solid #30363d; padding: 1rem; display: flex; flex-direction: column; }
-    .sidebar h3 { font-size: 1rem; color: #8b949e; text-transform: uppercase; margin-top: 1rem;}
-    .sidebar a { <a onclick="adminLogout()" style="color:#f85149; cursor: pointer;">← Logout / Exit</a>
-      display: block; padding: 0.75rem; color: #c9d1d9; text-decoration: none; border-radius: 6px; cursor: pointer;
-    }
-    .sidebar a:hover { background: #21262d; }
-    .sidebar a.active { background: #21262d; color: var(--primary); border-left: 3px solid var(--primary); }
-
-    /* CONTENT AREAS */
-    .main-content { padding: 2rem; }
-    .tab-content { display: none; animation: fadeIn 0.3s ease; }
-    .tab-content.active { display: block; }
-    
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-    /* WIDGETS */
-    .stat-card { background: var(--card-bg); padding: 1.5rem; border-radius: 6px; border: 1px solid #30363d; margin-bottom: 1rem; }
-    .stat-number { font-size: 2rem; font-weight: bold; }
-    .table-container { background: #0d1117; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
-    table { margin: 0; }
-    th { background: #161b22; }
-    
-    /* LOGIN OVERLAY */
+    /* Login Overlay */
     #login-overlay {
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 999;
-      display: flex; align-items: center; justify-content: center;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: black; z-index: 9999;
+        display: flex; align-items: center; justify-content: center;
     }
-    .login-box { background: var(--card-bg); padding: 2rem; width: 400px; border: 1px solid #333; text-align: center; }
+    
+    /* Layout */
+    .admin-layout { display: none; height: 100vh; grid-template-columns: 250px 1fr; }
+    
+    /* Sidebar */
+    .sidebar { background: #161b22; border-right: 1px solid #30363d; padding: 2rem 1rem; display: flex; flex-direction: column; }
+    .sidebar a {
+        display: block; padding: 0.75rem 1rem; color: #8b949e; text-decoration: none;
+        border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;
+    }
+    .sidebar a:hover { background: #21262d; color: white; }
+    .sidebar a.active { background: #1f6feb; color: white; font-weight: bold; }
+    
+    /* Content Area */
+    .content { padding: 2rem; overflow-y: auto; background: #0d1117; }
+    
+    /* Stats Grid */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
+    .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; margin: 0.5rem 0; }
+    
+    /* Tabs */
+    .tab-content { display: none; animation: fadeIn 0.3s; }
+    .tab-content.active { display: block; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th { text-align: left; border-bottom: 1px solid #30363d; padding: 1rem; color: #8b949e; }
+    td { padding: 1rem; border-bottom: 1px solid #21262d; }
+    
+    .status-active { color: #2ea043; font-weight: bold; }
+    .status-banned { color: #f85149; font-weight: bold; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
 
   <div id="login-overlay">
-    <div class="login-box">
-      <hgroup>
-        <h2 style="color:white;">SECURE ACCESS</h2>
-        <h4 style="color:var(--primary);">SOC DASHBOARD</h4>
-      </hgroup>
-     <form onsubmit="adminLogin(event)">
-        <input type="text" id="adminUser" placeholder="Enter Username" required autocomplete="off">
-        <input type="password" id="adminPass" placeholder="Enter Password" required autocomplete="off">
-        <button type="submit" class="contrast">Authenticate</button>
-      </form>
-    </div>
+    <article style="background: #161b22; border: 1px solid #30363d; width: 400px; padding: 2rem;">
+        <h3 style="text-align: center; margin-bottom: 2rem;">SECURE ACCESS</h3>
+        <form onsubmit="adminLogin(event)">
+            <input type="text" id="adminUser" placeholder="Enter Username" required autocomplete="off">
+            <input type="password" id="adminPass" placeholder="Enter Password" required autocomplete="off">
+            <button type="submit" class="contrast">Authenticate</button>
+        </form>
+    </article>
   </div>
 
-  <div class="dashboard-grid" id="adminPanel" style="display:none;">
+  <div id="adminPanel" class="admin-layout">
     
     <aside class="sidebar">
-      <div style="margin-bottom: 2rem; font-weight:bold; color:white;">🛡️ TechWear SOC</div>
-      
-      <a onclick="switchTab('monitor')" id="nav-monitor" class="active">Live Monitor</a>
-      <a onclick="switchTab('threats')" id="nav-threats">Threat Analysis</a>
-      <a onclick="switchTab('model')" id="nav-model">Model Configuration</a>
-      <a onclick="switchTab('users')" id="nav-users">User Management</a>
-      
-      <div style="flex-grow:1"></div>
-      <a href="index.html" style="color:#f85149;">← Logout / Exit</a>
+        <h4 style="color: white; padding-left: 1rem;">SOC Dashboard</h4>
+        <hr style="margin: 1rem 0; border-color: #30363d;">
+        
+        <nav>
+            <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
+            <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
+            <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
+        </nav>
+
+        <div style="margin-top: auto;">
+            <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
+            <a onclick="adminLogout()" style="color: #f85149;">🚪 Logout</a>
+        </div>
     </aside>
 
-    <main class="main-content">
-      
-      <div id="tab-monitor" class="tab-content active">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <h2>SQL Injection Monitor</h2>
-          <button class="outline secondary" onclick="generateRandomAttack()">⚠ Simulate Attack</button>
-        </div>
+    <main class="content">
         
-        <div class="grid">
-          <div class="stat-card">
-            <div class="stat-number" id="totalReq">0</div>
-            <small>Total Requests</small>
-          </div>
-          <div class="stat-card" style="border-color: var(--primary);">
-            <div class="stat-number" id="blockedReq" style="color: var(--primary);">0</div>
-            <small>Threats Mitigated</small>
-          </div>
-          <div class="stat-card">
-            <div class="stat-number">99.4%</div>
-            <small>Model Confidence</small>
-          </div>
+        <div id="tab-dashboard" class="tab-content active">
+            <h2>Live Threat Monitoring</h2>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="color: #8b949e;">Total Requests</div>
+                    <div class="stat-number" id="totalReq">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #f85149;">Threats Blocked</div>
+                    <div class="stat-number" id="blockedReq">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #2ea043;">System Status</div>
+                    <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">SECURE</div>
+                </div>
+            </div>
+
+            <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
+                <canvas id="trafficChart"></canvas>
+            </div>
         </div>
 
-        <div class="stat-card" style="height: 300px; padding: 1rem;">
-          <canvas id="trafficChart"></canvas>
-        </div>
-
-        <h4 style="margin-top:1rem">Live Traffic Logs</h4>
-        <div class="table-container" style="max-height: 250px; overflow-y: auto;">
-          <table id="logTable">
-            <thead>
-              <tr><th>Time</th><th>IP Source</th><th>Payload</th><th>Prediction</th><th>Action</th></tr>
-            </thead>
-            <tbody id="logBody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div id="tab-threats" class="tab-content">
-        <h2>Threat Analysis Report</h2>
-        <div class="grid">
-          <div class="stat-card">
-            <h4>Attack Vectors</h4>
-            <canvas id="threatPieChart" style="max-height: 250px;"></canvas>
-          </div>
-          <div class="stat-card">
-            <h4>Top Attacking IPs</h4>
-            <table>
-              <tr><td>192.168.1.45</td><td style="color:var(--primary)">12 Attempts</td></tr>
-              <tr><td>10.0.0.5</td><td style="color:var(--primary)">8 Attempts</td></tr>
-              <tr><td>172.16.0.22</td><td style="color:var(--primary)">3 Attempts</td></tr>
+        <div id="tab-users" class="tab-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2>User Database</h2>
+                <button class="outline" onclick="loadUsers()">↻ Refresh List</button>
+            </div>
+            
+            <table role="grid">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody">
+                    </tbody>
             </table>
-          </div>
         </div>
-        <div class="stat-card" style="margin-top:1rem;">
-          <h4>Detailed Forensic Log</h4>
-          <p>No critical system breaches detected in the last 24 hours.</p>
-        </div>
-      </div>
 
-      <div id="tab-model" class="tab-content">
-        <h2>ML Model Configuration</h2>
-        <div class="stat-card">
-          <label>Model Sensitivity Threshold (0.1 - 1.0)</label>
-          <input type="range" min="0.1" max="1.0" step="0.1" value="0.9">
-          
-          <label>
-            <input type="checkbox" checked> Auto-Block Malicious IPs
-          </label>
-          <label>
-            <input type="checkbox"> Enable Deep Packet Inspection
-          </label>
-          
-          <hr>
-          <h4>Retrain Model</h4>
-          <p>Last trained: 2 hours ago. Dataset: 50,000 queries.</p>
-          <button onclick="alert('Model retraining started... This may take a few minutes.')">Retrain with New Data</button>
+        <div id="tab-logs" class="tab-content">
+            <h2>Security Logs</h2>
+            <table role="grid">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>IP Address</th>
+                        <th>Query / Payload</th>
+                        <th>Threat Level</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="logBody">
+                    </tbody>
+            </table>
         </div>
-      </div>
-
-      <div id="tab-users" class="tab-content">
-        <h2>User Management</h2>
-        <div class="table-container">
-          <table role="grid">
-            <thead>
-              <tr><th>User</th><th>Role</th><th>Status</th><th>Action</th></tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>admin</td>
-                <td><strong>Super Admin</strong></td>
-                <td style="color:#2ea043">Active</td>
-                <td><button class="outline" disabled>Edit</button></td>
-              </tr>
-              <tr>
-                <td>analyst_01</td>
-                <td>Security Analyst</td>
-                <td style="color:#2ea043">Active</td>
-                <td><button class="outline secondary">Revoke</button></td>
-              </tr>
-              <tr>
-                <td>auditor_ext</td>
-                <td>Read Only</td>
-                <td style="color:orange">Pending</td>
-                <td><button class="outline">Approve</button></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <button style="margin-top:1rem" class="contrast" onclick="alert('Feature locked in demo mode')">+ Add New User</button>
-      </div>
 
     </main>
   </div>
 
-  <script src="js/admin.js"></script>
+  <script>
+    // --- VARIABLES ---
+    let totalRequests = 0;
+    let blockedThreats = 0;
+    let trafficChart;
+    
+    // --- LOGIN SYSTEM ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // Check Session
+        if (localStorage.getItem('adminSession') === 'active') {
+            showDashboard();
+        }
+    });
+
+    function adminLogin(e) {
+        e.preventDefault();
+        const u = document.getElementById('adminUser').value;
+        const p = document.getElementById('adminPass').value;
+        
+        if (u === 'admin' && p === 'admin123') {
+            localStorage.setItem('adminSession', 'active');
+            showDashboard();
+        } else {
+            alert("❌ ACCESS DENIED: Invalid Credentials");
+        }
+    }
+
+    function showDashboard() {
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'grid';
+        
+        // Start tools
+        initChart();
+        startSimulation();
+        loadUsers(); // Load users immediately
+    }
+
+    function adminLogout() {
+        localStorage.removeItem('adminSession');
+        window.location.reload();
+    }
+
+    // --- TAB SWITCHING ---
+    function switchTab(tabName) {
+        // Hide all tabs
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+
+        // Show selected
+        const tab = document.getElementById('tab-' + tabName);
+        const nav = document.getElementById('nav-' + tabName);
+        
+        if (tab) tab.classList.add('active');
+        if (nav) nav.classList.add('active');
+
+        // Reload data if specific tab
+        if(tabName === 'users') loadUsers();
+    }
+
+    // --- USER MANAGEMENT LOGIC ---
+    function loadUsers() {
+        const tbody = document.getElementById('userTableBody');
+        tbody.innerHTML = ''; // Clear table
+
+        // 1. Get the Real User from simulated login
+        const realUser = localStorage.getItem('currentUser') || 'No_User_Logged_In';
+        
+        // 2. Mock Data (Simulated Database)
+        const mockUsers = [
+            { id: 101, user: "admin", role: "Administrator", status: "Active" },
+            { id: 102, user: realUser, role: "Customer", status: "Active" }, // The real one
+            { id: 103, user: "hacker_01", role: "Unknown", status: "Suspicious" },
+            { id: 104, user: "test_account", role: "Customer", status: "Active" }
+        ];
+
+        mockUsers.forEach(u => {
+            const row = document.createElement('tr');
+            
+            // Determine Color for Status
+            let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
+            if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
+
+            row.innerHTML = `
+                <td>#${u.id}</td>
+                <td><strong>${u.user}</strong></td>
+                <td>${u.role}</td>
+                <td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td>
+                <td>
+                    ${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : 
+                      `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function blockUser(btn) {
+        if(confirm("Are you sure you want to blacklist this IP/User?")) {
+            const row = btn.closest('tr');
+            const statusCell = row.cells[3];
+            statusCell.innerText = "BANNED";
+            statusCell.style.color = "#f85149";
+            btn.innerText = "Unblock";
+            btn.setAttribute('disabled', 'true'); // Simulate permanent block
+            
+            // Increment threat counter
+            blockedThreats++;
+            document.getElementById('blockedReq').innerText = blockedThreats;
+        }
+    }
+
+    // --- CHARTS & SIMULATION ---
+    function initChart() {
+        const ctx = document.getElementById('trafficChart').getContext('2d');
+        trafficChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Traffic Volume',
+                    borderColor: '#2ea043',
+                    backgroundColor: 'rgba(46, 160, 67, 0.1)',
+                    data: [],
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { x: { display: false }, y: { display: true } },
+                plugins: { legend: { display: false } },
+                animation: { duration: 0 }
+            }
+        });
+    }
+
+    function startSimulation() {
+        setInterval(() => {
+            // 1. Random Stats
+            totalRequests += Math.floor(Math.random() * 5);
+            document.getElementById('totalReq').innerText = totalRequests;
+            
+            // 2. Chart Update
+            const time = new Date().toLocaleTimeString();
+            trafficChart.data.labels.push(time);
+            trafficChart.data.datasets[0].data.push(Math.floor(Math.random() * 50) + 10);
+            
+            if(trafficChart.data.labels.length > 20) {
+                trafficChart.data.labels.shift();
+                trafficChart.data.datasets[0].data.shift();
+            }
+            trafficChart.update();
+
+            // 3. Check for Real Attacks from Login Page
+            let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+            if (realAttacks.length > 0) {
+                const attack = realAttacks.shift();
+                addLog(attack.time, attack.ip, attack.query, "CRITICAL", "BLOCKED");
+                blockedThreats++;
+                document.getElementById('blockedReq').innerText = blockedThreats;
+                localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
+                alert("🚨 ALERT: New Attack Detected in Logs!"); // Notify Admin
+            }
+
+        }, 2000);
+    }
+
+    function addLog(time, ip, query, level, action) {
+        const tbody = document.getElementById('logBody');
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${time}</td>
+            <td>${ip}</td>
+            <td style="color:#ff7b72; font-family:monospace">${query}</td>
+            <td style="color:#f85149; font-weight:bold">${level}</td>
+            <td>${action}</td>
+        `;
+        tbody.prepend(row);
+    }
+  </script>
 </body>
 </html>
