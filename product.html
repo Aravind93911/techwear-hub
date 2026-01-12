@@ -25,6 +25,7 @@
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
       <li><a href="cart.html">Cart</a></li>
+      <li><a href="login.html">Login</a></li>
     </ul>
   </nav>
 
@@ -39,7 +40,9 @@
 
         <div>
             <h1 id="detailName" style="font-size: 2.5rem; margin-bottom: 0.5rem;">Loading...</h1>
+            
             <h2 id="detailPrice" style="color: #00bcd4; margin-bottom: 1.5rem;">₹0</h2>
+            
             <p id="detailDesc" style="font-size: 1.1rem; line-height: 1.6;">Loading description...</p>
             
             <button id="detailAddBtn" class="contrast" style="width: 100%; margin-top: 1rem; padding: 1rem; font-size: 1.1rem;">Add to Cart</button>
@@ -55,7 +58,7 @@
   </main>
 
   <script>
-    // 1. SHARED PRODUCT DATA (Must match Shop Page)
+    // 1. PRODUCT DATA (Matches Shop Page)
     const products = [
         { 
             id: 1, name: "Smartwatch Pro", price: 15999, 
@@ -105,8 +108,10 @@
         if (product) {
             document.getElementById('detailImage').src = product.image;
             document.getElementById('detailName').innerText = product.name;
-            // Format Price with Commas
+            
+            // Format Price with Commas (e.g., 15,999)
             document.getElementById('detailPrice').innerText = "₹" + product.price.toLocaleString('en-IN');
+            
             document.getElementById('detailDesc').innerText = product.desc;
             
             // Setup Button
