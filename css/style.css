@@ -109,3 +109,30 @@ dialog header {
   padding: 0.7rem;
   display: flex; align-items: center;
 }
+
+/* --- FIX FOR SQUEEZED GRID --- */
+#productGrid {
+  display: grid;
+  /* This tells the browser: "Don't squash them! Wrap to next line if needed." */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+/* Ensure images fit the card correctly */
+.image-wrapper img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+}
+
+/* Fix buttons stacking weirdly */
+.product-details .grid {
+    display: flex; 
+    gap: 10px;
+}
+.product-details .grid button, 
+.product-details .grid a {
+    width: 100%;
+    margin: 0;
+}
