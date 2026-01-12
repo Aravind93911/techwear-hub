@@ -3,36 +3,90 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>My Profile - TechWear Hub</title>
+  <title>Profile Config - TechWear Hub</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
   
   <style>
-    /* Profile Header Styling */
-    .profile-header {
-        background-image: linear-gradient(to right, #161b22, #21262d);
-        border: 1px solid #30363d;
-        color: white;
-        padding: 3rem 2rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        text-align: center;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+    /* --- PREMIUM DASHBOARD STYLING --- */
+    body {
+        background-color: #0d1117;
+        background-image: radial-gradient(circle at top right, rgba(0, 188, 212, 0.1), transparent 40%);
     }
-    .avatar {
-        width: 100px;
-        height: 100px;
-        background: var(--primary);
+
+    /* The Main Glass Card */
+    .dashboard-card {
+        background: rgba(22, 27, 34, 0.7);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(48, 54, 61, 0.7);
+        border-radius: 16px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        overflow: hidden;
+    }
+
+    /* Left Sidebar (Avatar) */
+    .profile-sidebar {
+        background: rgba(33, 38, 45, 0.5);
+        text-align: center;
+        padding: 3rem 1.5rem;
+        border-right: 1px solid #30363d;
+    }
+
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+        background: linear-gradient(135deg, #00bcd4, #2196f3);
         border-radius: 50%;
-        margin: 0 auto 1rem auto;
+        margin: 0 auto 1.5rem auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 3rem;
-        color: #000;
+        font-size: 3.5rem;
+        font-weight: 800;
+        color: white;
+        box-shadow: 0 0 20px rgba(0, 188, 212, 0.4);
+        position: relative;
+    }
+    
+    .status-badge {
+        background: #2ea043;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
         font-weight: bold;
-        box-shadow: 0 0 15px var(--primary);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 1rem;
+        display: inline-block;
+    }
+
+    /* Right Content (Form) */
+    .profile-content {
+        padding: 3rem;
+    }
+
+    /* Custom Inputs */
+    input, textarea, select {
+        background-color: #0d1117 !important;
+        border: 1px solid #30363d !important;
+        transition: all 0.3s ease;
+    }
+    input:focus, textarea:focus {
+        border-color: #00bcd4 !important;
+        box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2) !important;
+    }
+
+    /* Responsive Layout */
+    .dashboard-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        min-height: 600px;
+    }
+    @media (max-width: 900px) {
+        .dashboard-layout { grid-template-columns: 1fr; }
+        .profile-sidebar { border-right: none; border-bottom: 1px solid #30363d; }
     }
   </style>
 </head>
@@ -43,65 +97,173 @@
     <ul id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
-      <li><a href="profile.html" id="loginLink" role="button" class="outline contrast">Profile</a></li>
       <li><a href="cart.html">Cart</a></li>
-      <li><a href="admin.html">Admin</a></li>
+      <li><a href="login.html">Login</a></li>
     </ul>
   </nav>
 
-  <main class="container">
+  <main class="container" style="padding-top: 2rem;">
     
-    <div class="profile-header">
-        <div class="avatar" id="userAvatar">U</div>
-        <h2 id="welcomeMsg" style="margin-bottom:0.5rem">Welcome back!</h2>
-        <p style="color: #8b949e;">Member since 2026</p>
-    </div>
+    <div class="dashboard-card">
+        <div class="dashboard-layout">
+            
+            <div class="profile-sidebar">
+                <div class="avatar-circle" id="avatarLetter">U</div>
+                <h3 id="sidebarName" style="margin-bottom: 0.5rem; color: white;">User</h3>
+                <p style="color: #8b949e; font-size: 0.9rem;">TechWear Member</p>
+                <div class="status-badge">● Online</div>
 
-    <div class="grid">
-        <article>
-            <header><strong>Account Details</strong></header>
-            <p><strong>Username:</strong> <span id="displayUser" style="color:var(--primary)">Loading...</span></p>
-            <p><strong>Email:</strong> user@example.com (Mock)</p>
-            <p><strong>Status:</strong> <span style="color: #2ea043">● Active</span></p>
-        </article>
+                <hr style="margin: 2rem 0; border-color: #30363d;">
+                
+                <div style="text-align: left; padding: 0 1rem;">
+                    <small style="color:#8b949e">MEMBER ID</small>
+                    <div style="font-family: monospace; color: #00bcd4;">TWH-8829-X</div>
+                    
+                    <small style="color:#8b949e; display:block; margin-top:1rem;">JOINED</small>
+                    <div style="color: white;">Jan 2026</div>
+                </div>
 
-        <article>
-            <header><strong>Recent Orders</strong></header>
-            <ul>
-                <li>Order #1024 - Smartwatch Pro <span style="float:right; color:#2ea043">Delivered</span></li>
-                <hr style="margin:0.5rem 0; opacity:0.2">
-                <li>Order #1021 - Fitness Tracker <span style="float:right; color:orange">Shipped</span></li>
-            </ul>
-        </article>
-    </div>
+                <button onclick="userLogout()" class="outline secondary" style="width: 80%; margin-top: 3rem; border-color: #f85149; color: #f85149;">
+                    Log Out
+                </button>
+            </div>
 
-    <div style="text-align: center; margin-top: 3rem;">
-        <button class="secondary outline" onclick="userLogout()" style="width: 200px;">Logout</button>
+            <div class="profile-content">
+                <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="margin: 0;">Account Settings</h2>
+                    <span style="color: #8b949e; font-size: 0.9rem;">Manage your personal data</span>
+                </header>
+
+                <form onsubmit="saveProfile(event)">
+                    <div class="grid">
+                        <div>
+                            <label for="fullName">Display Name</label>
+                            <input type="text" id="fullName" placeholder="Enter your name">
+                        </div>
+                        <div>
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email" placeholder="user@example.com" disabled style="opacity: 0.7; cursor: not-allowed;">
+                            <small>Contact support to change email</small>
+                        </div>
+                    </div>
+
+                    <label for="bio">Bio / Status</label>
+                    <textarea id="bio" rows="2" placeholder="Tell us about yourself..."></textarea>
+
+                    <div class="grid" style="margin-top: 1rem;">
+                        <div>
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" placeholder="+91 00000 00000">
+                        </div>
+                        <div>
+                            <label for="location">Location</label>
+                            <input type="text" id="location" placeholder="Hyderabad, India">
+                        </div>
+                    </div>
+
+                    <hr style="border-color: #30363d; margin: 2rem 0;">
+
+                    <h4 style="color: #00bcd4;">Security Configuration</h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 1rem; border-radius: 8px; border: 1px solid #30363d;">
+                        <div>
+                            <strong>Two-Factor Authentication (2FA)</strong>
+                            <div style="font-size: 0.8rem; color: #8b949e;">Adds an extra layer of security to your account.</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" checked> 
+                            <span style="font-size: 0.9rem; color: #2ea043; font-weight: bold;">ENABLED</span>
+                        </label>
+                    </div>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button type="submit" id="saveBtn" class="contrast" style="width: auto; padding-left: 2rem; padding-right: 2rem;">
+                            Save Changes
+                        </button>
+                        <button type="button" class="secondary outline" onclick="location.reload()" style="width: auto;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
   </main>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
-        // 1. Check if user is logged in
-        const user = localStorage.getItem('currentUser');
-        
-        if(user) {
-            // Update Page Content
-            document.getElementById('welcomeMsg').innerText = `Welcome, ${user}!`;
-            document.getElementById('displayUser').innerText = user;
-            document.getElementById('userAvatar').innerText = user.charAt(0).toUpperCase();
-        } else {
-            // If NOT logged in, kick them back to Login page
+        // 1. CHECK LOGIN
+        const currentUser = localStorage.getItem('currentUser');
+        if (!currentUser) {
             window.location.href = 'login.html';
+            return;
         }
+
+        // 2. LOAD SAVED DATA (Or defaults)
+        const savedData = JSON.parse(localStorage.getItem('userProfileData')) || {};
+        
+        // Fill Sidebar
+        document.getElementById('avatarLetter').innerText = currentUser.charAt(0).toUpperCase();
+        document.getElementById('sidebarName').innerText = savedData.fullName || currentUser;
+
+        // Fill Form
+        document.getElementById('fullName').value = savedData.fullName || currentUser;
+        document.getElementById('email').value = currentUser + "@techwear.com"; // Mock email
+        document.getElementById('bio').value = savedData.bio || "";
+        document.getElementById('phone').value = savedData.phone || "";
+        document.getElementById('location').value = savedData.location || "";
     });
 
+    // 3. SAVE FUNCTIONALITY
+    function saveProfile(event) {
+        event.preventDefault(); // Stop page reload
+
+        const btn = document.getElementById('saveBtn');
+        const originalText = btn.innerText;
+
+        // Visual Feedback (Loading)
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerText = "Saving Config...";
+
+        // Collect Data
+        const profileData = {
+            fullName: document.getElementById('fullName').value,
+            bio: document.getElementById('bio').value,
+            phone: document.getElementById('phone').value,
+            location: document.getElementById('location').value
+        };
+
+        // Simulate Network Delay (1 second)
+        setTimeout(() => {
+            // Save to LocalStorage
+            localStorage.setItem('userProfileData', JSON.stringify(profileData));
+            
+            // Update Sidebar Name immediately
+            document.getElementById('sidebarName').innerText = profileData.fullName;
+
+            // Success State
+            btn.removeAttribute('aria-busy');
+            btn.innerText = "✅ Saved Successfully!";
+            btn.style.backgroundColor = "#2ea043";
+            btn.style.borderColor = "#2ea043";
+            btn.style.color = "white";
+
+            // Reset Button after 2 seconds
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.removeAttribute('style'); // Clear inline green styles
+            }, 2000);
+            
+        }, 1000);
+    }
+
     function userLogout() {
-        // Clear session and go home
-        localStorage.removeItem('currentUser');
-        window.location.href = 'index.html';
+        if(confirm("Securely log out of session?")) {
+            localStorage.removeItem('currentUser');
+            window.location.href = 'index.html';
+        }
     }
   </script>
+
 </body>
 </html>
