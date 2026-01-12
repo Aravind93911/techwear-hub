@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Account - TechWear Hub</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body > main {
+      background-image: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.8)), url('https://images.unsplash.com/photo-1550009158-9ebf69173e03?auto=format&fit=crop&w=1920&q=80');
+      background-size: cover;
+      background-position: center;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .auth-card {
+      background-color: #161b22;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      width: 100%;
+      max-width: 450px;
+      border: 1px solid #30363d;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="container-fluid" style="position: absolute; top: 0; width: 100%; z-index: 10;">
+    <ul><li><strong>TechWear Hub</strong></li></ul>
+    <ul>
+      <li><a href="index.html" style="color:white">Home</a></li>
+      <li><a href="login.html" role="button" class="outline contrast">Login</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <div class="auth-card">
+      <hgroup style="text-align:center; margin-bottom:2rem;">
+        <h2>Join the Hub</h2>
+        <p>Create your account to start shopping.</p>
+      </hgroup>
+
+      <form onsubmit="handleRegister(event)">
+        <label for="regUser">Username</label>
+        <input type="text" id="regUser" placeholder="Choose a username" required>
+
+        <label for="regEmail">Email Address</label>
+        <input type="email" id="regEmail" placeholder="you@example.com" required>
+
+        <label for="regPass">Password</label>
+        <input type="password" id="regPass" placeholder="Create a password" required>
+
+        <button type="submit" class="contrast" style="margin-top:1rem;">Create Account</button>
+      </form>
+
+      <p style="text-align:center; font-size:0.9rem; margin-top:1.5rem; color:#8b949e;">
+        Already have an account? <a href="login.html" style="color:#58a6ff">Sign In</a>
+      </p>
+    </div>
+  </main>
+
+  <script>
+    function handleRegister(event) {
+        event.preventDefault();
+        
+        const user = document.getElementById('regUser').value;
+        const pass = document.getElementById('regPass').value;
+        const email = document.getElementById('regEmail').value;
+
+        // 1. GET EXISTING USERS
+        let userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+
+        // 2. CHECK IF USERNAME TAKEN
+        const exists = userDB.find(u => u.username === user);
+        if (exists) {
+            alert("Username already taken! Please choose another.");
+            return;
+        }
+
+        // 3. SAVE NEW USER
+        userDB.push({ username: user, password: pass, email: email });
+        localStorage.setItem('techWearUsers', JSON.stringify(userDB));
+
+        // 4. SUCCESS & REDIRECT
+        alert("Account Created Successfully! Please Login.");
+        window.location.href = 'login.html';
+    }
+  </script>
+</body>
+</html>
