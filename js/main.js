@@ -231,3 +231,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ... Rest of your load functions (loadShop, loadProductDetails) ...
 });
+// js/main.js
+
+function userLogin(event) {
+    // 1. STOP THE REFRESH (Most Important Line)
+    event.preventDefault(); 
+    console.log("Submit button clicked - Default prevented");
+
+    // 2. Get Values
+    const usernameInput = document.getElementById('username');
+    const userVal = usernameInput.value;
+    
+    // 3. Simple Alert Test
+    alert("You clicked login! typed: " + userVal);
+
+    // 4. SQL Check logic (Simplified)
+    if (userVal.includes("'") || userVal.includes("OR")) {
+        alert("⚠️ SQL INJECTION DETECTED!");
+        return;
+    }
+
+    // 5. Normal Redirect
+    window.location.href = "profile.html";
+}
