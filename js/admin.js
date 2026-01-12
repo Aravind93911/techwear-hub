@@ -84,11 +84,72 @@ function initThreatChart() {
 }
 
 // --- 4. TRAFFIC SIMULATION ---
+// js/admin.js - Update this function
+
 function startSimulation() {
     setInterval(() => {
-        const isAttack = Math.random() < 0.2; 
-        addLogRow(isAttack);
+        // 1. CHECK FOR REAL ATTACKS FROM LOGIN PAGE
+        let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        
+        if (realAttacks.length > 0) {
+            // Found a "real" attack from the user!
+            const attack = realAttacks.shift(); // Get the oldest one
+            
+            // Add to the admin table
+            addCustomRow(attack.time, attack.ip, attack.query, true);
+            
+            // Save the empty list back to storage
+            localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
+        } 
+        else {
+            // 2. IF NO REAL ATTACK, GENERATE RANDOM TRAFFIC (To keep the chart moving)
+            const isAttack = Math.random() < 0.1; // 10% chance of random attack
+            addLogRow(isAttack);
+        }
     }, 1500);
+}
+
+// Helper function to add the specific row from the login page
+function addCustomRow(time, ip, query, isAttack) {
+    totalRequests++;
+    if(isAttack) blockedThreats++;
+
+    // Update Stats
+    document.getElementById('totalReq').innerText = totalRequests;
+    document.getElementById('blockedReq').innerText = blockedThreats;
+
+    // Update Table
+    const tableBody = document.getElementById('logBody');
+    const newRow = document.createElement('tr');
+    
+    // Highlight the query in RED if it's an attack
+    const cssClass = "color:#f85149; font-weight:bold";
+    const action = "BLOCKED (Firewall)";
+
+    newRow.innerHTML = `
+        <td>${time}</td>
+        <td>${ip}</td>
+        <td style="font-family:monospace; color:#ff7b72">${query}</td>
+        <td style="${cssClass}">CRITICAL THREAT</td>
+        <td>${action}</td>
+    `;
+    
+    tableBody.prepend(newRow);
+    if (tableBody.children.length > 8) tableBody.removeChild(tableBody.lastChild);
+
+    // Update Chart (Force a spike)
+    if (trafficChart) {
+        trafficChart.data.labels.push(time);
+        trafficChart.data.datasets[0].data.push(0); // Safe drops
+        trafficChart.data.datasets[1].data.push(1); // Attack spikes
+        
+        if (trafficChart.data.labels.length > 15) {
+            trafficChart.data.labels.shift();
+            trafficChart.data.datasets[0].data.shift();
+            trafficChart.data.datasets[1].data.shift();
+        }
+        trafficChart.update();
+    }
 }
 
 function generateRandomAttack() { addLogRow(true); }
