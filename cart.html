@@ -119,7 +119,7 @@
   </dialog>
 
   <script>
-    // INTERNAL SCRIPT - FORCE LOAD
+    // --- LOAD CART ---
     document.addEventListener('DOMContentLoaded', () => {
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
@@ -138,8 +138,6 @@
         cart.forEach((product, index) => {
             let price = parseFloat(product.price) || 0; 
             total += price;
-
-            // FORCE INDIAN RUPEE FORMAT
             let priceString = price.toLocaleString('en-IN');
 
             html += `
@@ -152,8 +150,6 @@
         });
 
         cartList.innerHTML = html;
-        
-        // Update Total Displays
         const totalString = "₹" + total.toLocaleString('en-IN');
         cartTotal.innerText = `Total: ${totalString}`;
         
@@ -175,12 +171,27 @@
         }
     }
 
+    // --- CHECKOUT LOGIC WITH SECURITY CHECK ---
     function openCheckout() {
+        // 1. Check if Cart is Empty
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
         if (cart.length === 0) {
             alert("Your cart is empty!");
             return;
         }
+
+        // 2. NEW SECURITY CHECK: Is User Logged In?
+        const currentUser = localStorage.getItem('currentUser');
+        
+        if (!currentUser) {
+            // IF NOT LOGGED IN:
+            if(confirm("🔒 Access Denied: You must be logged in to proceed to checkout.\n\nClick OK to go to the Login page.")) {
+                window.location.href = 'login.html';
+            }
+            return; // Stop here! Do not open the checkout.
+        }
+
+        // 3. If Logged In, Open Modal
         document.getElementById('checkoutModal').setAttribute('open', true);
     }
 
