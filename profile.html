@@ -4,30 +4,35 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>My Profile - TechWear Hub</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  
   <style>
-    /* Profile Card Styling */
+    /* Profile Header Styling */
     .profile-header {
-        background-image: linear-gradient(to right, #2c3e50, #4ca1af);
+        background-image: linear-gradient(to right, #161b22, #21262d);
+        border: 1px solid #30363d;
         color: white;
         padding: 3rem 2rem;
         border-radius: 8px;
         margin-bottom: 2rem;
         text-align: center;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.3);
     }
     .avatar {
         width: 100px;
         height: 100px;
-        background: white;
+        background: var(--primary);
         border-radius: 50%;
         margin: 0 auto 1rem auto;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
-        color: #333;
+        color: #000;
         font-weight: bold;
+        box-shadow: 0 0 15px var(--primary);
     }
   </style>
 </head>
@@ -38,7 +43,7 @@
     <ul id="navLinks">
       <li><a href="index.html">Home</a></li>
       <li><a href="shop.html">Shop</a></li>
-      <li><a href="profile.html" id="loginLink" role="button" class="outline">Profile</a></li>
+      <li><a href="profile.html" id="loginLink" role="button" class="outline contrast">Profile</a></li>
       <li><a href="cart.html">Cart</a></li>
       <li><a href="admin.html">Admin</a></li>
     </ul>
@@ -48,23 +53,24 @@
     
     <div class="profile-header">
         <div class="avatar" id="userAvatar">U</div>
-        <h2 id="welcomeMsg">Welcome back!</h2>
-        <p>Member since 2026</p>
+        <h2 id="welcomeMsg" style="margin-bottom:0.5rem">Welcome back!</h2>
+        <p style="color: #8b949e;">Member since 2026</p>
     </div>
 
     <div class="grid">
         <article>
             <header><strong>Account Details</strong></header>
-            <p><strong>Username:</strong> <span id="displayUser">Loading...</span></p>
+            <p><strong>Username:</strong> <span id="displayUser" style="color:var(--primary)">Loading...</span></p>
             <p><strong>Email:</strong> user@example.com (Mock)</p>
-            <p><strong>Status:</strong> <span style="color: green">Active</span></p>
+            <p><strong>Status:</strong> <span style="color: #2ea043">● Active</span></p>
         </article>
 
         <article>
             <header><strong>Recent Orders</strong></header>
             <ul>
-                <li>Order #1024 - Smartwatch Pro (Delivered)</li>
-                <li>Order #1021 - Fitness Tracker (Shipped)</li>
+                <li>Order #1024 - Smartwatch Pro <span style="float:right; color:#2ea043">Delivered</span></li>
+                <hr style="margin:0.5rem 0; opacity:0.2">
+                <li>Order #1021 - Fitness Tracker <span style="float:right; color:orange">Shipped</span></li>
             </ul>
         </article>
     </div>
@@ -75,21 +81,27 @@
 
   </main>
 
-  <script src="js/main.js"></script>
-  
   <script>
-    // Specific script just for Profile page to show username
     document.addEventListener('DOMContentLoaded', () => {
+        // 1. Check if user is logged in
         const user = localStorage.getItem('currentUser');
+        
         if(user) {
+            // Update Page Content
             document.getElementById('welcomeMsg').innerText = `Welcome, ${user}!`;
             document.getElementById('displayUser').innerText = user;
             document.getElementById('userAvatar').innerText = user.charAt(0).toUpperCase();
         } else {
-            // If not logged in, go back to login
+            // If NOT logged in, kick them back to Login page
             window.location.href = 'login.html';
         }
     });
+
+    function userLogout() {
+        // Clear session and go home
+        localStorage.removeItem('currentUser');
+        window.location.href = 'index.html';
+    }
   </script>
 </body>
 </html>
