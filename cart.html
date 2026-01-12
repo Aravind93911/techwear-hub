@@ -58,7 +58,7 @@
   </nav>
 
   <main class="container">
-    <h2>Your Cart</h2>
+    <h2>Your Shopping Cart</h2>
     
     <section id="cartList">
         <p>Loading cart...</p>
@@ -119,7 +119,7 @@
   </dialog>
 
   <script>
-    // --- LOAD CART ---
+    // INTERNAL SCRIPT - FORCE LOAD
     document.addEventListener('DOMContentLoaded', () => {
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
@@ -139,7 +139,7 @@
             let price = parseFloat(product.price) || 0; 
             total += price;
 
-            // Format price neatly
+            // FORCE INDIAN RUPEE FORMAT
             let priceString = price.toLocaleString('en-IN');
 
             html += `
@@ -157,7 +157,6 @@
         const totalString = "₹" + total.toLocaleString('en-IN');
         cartTotal.innerText = `Total: ${totalString}`;
         
-        // Update Button Text inside Modal
         const payBtnText = document.getElementById('payAmount');
         if(payBtnText) payBtnText.innerText = totalString;
     });
@@ -176,7 +175,6 @@
         }
     }
 
-    // --- CHECKOUT LOGIC ---
     function openCheckout() {
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
         if (cart.length === 0) {
