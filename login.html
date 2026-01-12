@@ -80,49 +80,52 @@
     </div>
   </main>
 
-  <script>
+ <script>
     function userLogin(event) {
-        // 1. PREVENT PAGE REFRESH (Crucial)
         event.preventDefault(); 
         
-        // 2. Get User Input
-        const usernameInput = document.getElementById('username');
-        const userVal = usernameInput.value;
-        console.log("Checking login for:", userVal);
+        const userVal = document.getElementById('username').value;
+        const passVal = document.getElementById('password').value;
 
-        // 3. SQL INJECTION CHECKER
-        // We convert to uppercase so 'or' and 'OR' are both caught
+        // --- 1. SQL INJECTION SIMULATION ---
         const cleanUser = userVal.toUpperCase();
+        const sqlPatterns = ["' OR 1=1", "' OR '1'='1", "UNION SELECT", "--"];
         
-        // The list of "Attack" words
-        const sqlPatterns = ["' OR 1=1", "' OR '1'='1", "UNION SELECT", "DROP TABLE", "--"];
-        
-        // Check if the input contains any of the bad words
-        const isAttack = sqlPatterns.some(pattern => cleanUser.includes(pattern));
-
-        if (isAttack) {
-            // --- ATTACK CAUGHT ---
-            alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!\n\nThis request has been blocked and logged to the Security Dashboard.");
-            
-            // Save log to localStorage so Admin page can see it
+        if (sqlPatterns.some(pattern => cleanUser.includes(pattern))) {
+            alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!");
             let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
             attackLogs.push({
                 time: new Date().toLocaleTimeString(),
-                ip: "192.168.1.105 (Simulated IP)",
+                ip: "192.168.1.105",
                 query: userVal, 
                 type: "SQL Injection"
             });
             localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
-            return; // STOP. Do not log them in.
+            return;
         }
 
-        // 4. NORMAL LOGIN (If no attack)
-        if (userVal) {
-            localStorage.setItem('currentUser', userVal);
+        // --- 2. CHECK CREDENTIALS (THE FIX) ---
+        
+        // A. Check for "Admin" backdoor (for your ease)
+        if (userVal === 'admin' && passVal === 'admin123') {
+            localStorage.setItem('currentUser', 'Administrator');
+            window.location.href = 'profile.html';
+            return;
+        }
+
+        // B. Check Registered Users
+        let userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+        const validUser = userDB.find(u => u.username === userVal && u.password === passVal);
+
+        if (validUser) {
+            // SUCCESS!
+            localStorage.setItem('currentUser', validUser.username);
             window.location.href = 'profile.html'; 
+        } else {
+            // FAILED
+            alert("❌ Login Failed: Incorrect Username or Password.\n(Did you create an account?)");
         }
     }
   </script>
-
 </body>
 </html>
