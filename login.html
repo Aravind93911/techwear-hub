@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Login - TechWear Hub</title>
+  
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
+  
   <style>
-    /* Custom style for the login page background */
+    /* Custom background for Login Page */
     body > main {
       background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80');
       background-size: cover;
@@ -76,9 +78,52 @@
         Don't have an account? <a href="#" style="color: var(--primary);">Create Account</a>
       </div>
     </div>
- <head>
-  <link rel="stylesheet" href="css/style.css" />
-  
-  <script src="js/main.js" defer></script> 
-</head>
+  </main>
+
+  <script>
+    function userLogin(event) {
+        // 1. STOP PAGE REFRESH
+        event.preventDefault(); 
+        
+        // 2. Get Input Values
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const userVal = usernameInput.value;
+        const passVal = passwordInput.value;
+        
+        console.log("Login attempt:", userVal);
+
+        // 3. CHECK FOR SQL INJECTION (Case Insensitive)
+        const cleanUser = userVal.toUpperCase();
+        
+        // List of attack phrases
+        const sqlPatterns = ["' OR 1=1", "' OR '1'='1", "UNION SELECT", "DROP TABLE", "--"];
+        
+        const isAttack = sqlPatterns.some(pattern => cleanUser.includes(pattern));
+
+        if (isAttack) {
+            // --- ATTACK DETECTED ---
+            alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!\nRequest has been blocked and logged to Admin Panel.");
+            
+            // Save to Admin Log
+            let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+            attackLogs.push({
+                time: new Date().toLocaleTimeString(),
+                ip: "192.168.1.105 (Attacker)",
+                query: userVal, 
+                type: "SQL Injection"
+            });
+            localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
+            return; // Stop here
+        }
+
+        // 4. NORMAL LOGIN SUCCESS
+        if (userVal) {
+            localStorage.setItem('currentUser', userVal);
+            window.location.href = 'profile.html'; 
+        }
+    }
+  </script>
+
+</body>
 </html>
