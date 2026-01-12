@@ -23,6 +23,7 @@
         border-radius: 16px;
         box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         overflow: hidden;
+        margin-bottom: 3rem;
     }
 
     /* Left Sidebar (Avatar) */
@@ -76,6 +77,15 @@
     input:focus, textarea:focus {
         border-color: #00bcd4 !important;
         box-shadow: 0 0 0 2px rgba(0, 188, 212, 0.2) !important;
+    }
+
+    /* Password Section */
+    .password-section {
+        background: rgba(255, 0, 0, 0.05);
+        border: 1px solid #30363d;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-top: 2rem;
     }
 
     /* Responsive Layout */
@@ -161,29 +171,40 @@
                         </div>
                     </div>
 
-                    <hr style="border-color: #30363d; margin: 2rem 0;">
-
-                    <h4 style="color: #00bcd4;">Security Configuration</h4>
-                    <div style="display: flex; justify-content: space-between; align-items: center; background: #0d1117; padding: 1rem; border-radius: 8px; border: 1px solid #30363d;">
-                        <div>
-                            <strong>Two-Factor Authentication (2FA)</strong>
-                            <div style="font-size: 0.8rem; color: #8b949e;">Adds an extra layer of security to your account.</div>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" checked> 
-                            <span style="font-size: 0.9rem; color: #2ea043; font-weight: bold;">ENABLED</span>
-                        </label>
-                    </div>
-
-                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <div style="margin-top: 1.5rem;">
                         <button type="submit" id="saveBtn" class="contrast" style="width: auto; padding-left: 2rem; padding-right: 2rem;">
-                            Save Changes
-                        </button>
-                        <button type="button" class="secondary outline" onclick="location.reload()" style="width: auto;">
-                            Cancel
+                            Save Details
                         </button>
                     </div>
                 </form>
+
+                <hr style="border-color: #30363d; margin: 3rem 0;">
+
+                <h4 style="color: #f85149;">Security Zone</h4>
+                
+                <div class="password-section">
+                    <h5 style="margin-bottom: 1rem;">Change Password</h5>
+                    <form onsubmit="updatePassword(event)">
+                        <label for="currentPass">Current Password</label>
+                        <input type="password" id="currentPass" placeholder="Enter current password" required>
+                        
+                        <div class="grid">
+                            <div>
+                                <label for="newPass">New Password</label>
+                                <input type="password" id="newPass" placeholder="New password" required>
+                            </div>
+                            <div>
+                                <label for="confirmPass">Confirm Password</label>
+                                <input type="password" id="confirmPass" placeholder="Repeat new password" required>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" id="passBtn" class="secondary outline" style="width: auto; margin-top: 1rem;">
+                            Update Password
+                        </button>
+                    </form>
+                </div>
+
             </div>
         </div>
     </div>
@@ -208,24 +229,27 @@
 
         // Fill Form
         document.getElementById('fullName').value = savedData.fullName || currentUser;
-        document.getElementById('email').value = currentUser + "@techwear.com"; // Mock email
+        
+        // Try to find email from Registration DB
+        const userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+        const userRecord = userDB.find(u => u.username === currentUser);
+        const emailDisplay = userRecord ? userRecord.email : (currentUser + "@techwear.com");
+        
+        document.getElementById('email').value = emailDisplay;
         document.getElementById('bio').value = savedData.bio || "";
         document.getElementById('phone').value = savedData.phone || "";
         document.getElementById('location').value = savedData.location || "";
     });
 
-    // 3. SAVE FUNCTIONALITY
+    // 3. SAVE PROFILE DATA
     function saveProfile(event) {
-        event.preventDefault(); // Stop page reload
-
+        event.preventDefault(); 
         const btn = document.getElementById('saveBtn');
         const originalText = btn.innerText;
 
-        // Visual Feedback (Loading)
         btn.setAttribute('aria-busy', 'true');
-        btn.innerText = "Saving Config...";
+        btn.innerText = "Saving...";
 
-        // Collect Data
         const profileData = {
             fullName: document.getElementById('fullName').value,
             bio: document.getElementById('bio').value,
@@ -233,27 +257,61 @@
             location: document.getElementById('location').value
         };
 
-        // Simulate Network Delay (1 second)
         setTimeout(() => {
-            // Save to LocalStorage
             localStorage.setItem('userProfileData', JSON.stringify(profileData));
-            
-            // Update Sidebar Name immediately
             document.getElementById('sidebarName').innerText = profileData.fullName;
-
-            // Success State
             btn.removeAttribute('aria-busy');
-            btn.innerText = "✅ Saved Successfully!";
-            btn.style.backgroundColor = "#2ea043";
-            btn.style.borderColor = "#2ea043";
-            btn.style.color = "white";
+            btn.innerText = "✅ Saved!";
+            setTimeout(() => { btn.innerText = originalText; }, 2000);
+        }, 800);
+    }
 
-            // Reset Button after 2 seconds
-            setTimeout(() => {
-                btn.innerText = originalText;
-                btn.removeAttribute('style'); // Clear inline green styles
-            }, 2000);
+    // 4. UPDATE PASSWORD FUNCTION (NEW)
+    function updatePassword(event) {
+        event.preventDefault();
+        
+        const currentPass = document.getElementById('currentPass').value;
+        const newPass = document.getElementById('newPass').value;
+        const confirmPass = document.getElementById('confirmPass').value;
+        const btn = document.getElementById('passBtn');
+        
+        const currentUser = localStorage.getItem('currentUser');
+        
+        // A. Validate Match
+        if (newPass !== confirmPass) {
+            alert("❌ Error: New passwords do not match!");
+            return;
+        }
+
+        // B. Get Database
+        let userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+        const userIndex = userDB.findIndex(u => u.username === currentUser);
+
+        if (userIndex === -1) {
+            alert("❌ Error: User record not found (Are you Admin?). Cannot change password.");
+            return;
+        }
+
+        // C. Check Current Password
+        if (userDB[userIndex].password !== currentPass) {
+            alert("❌ Error: Current password is incorrect.");
+            return;
+        }
+
+        // D. Update Password
+        btn.setAttribute('aria-busy', 'true');
+        
+        setTimeout(() => {
+            userDB[userIndex].password = newPass; // Update memory
+            localStorage.setItem('techWearUsers', JSON.stringify(userDB)); // Save to storage
             
+            alert("✅ Success! Your password has been changed.");
+            
+            // Clear fields
+            document.getElementById('currentPass').value = '';
+            document.getElementById('newPass').value = '';
+            document.getElementById('confirmPass').value = '';
+            btn.removeAttribute('aria-busy');
         }, 1000);
     }
 
