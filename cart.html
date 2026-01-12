@@ -6,78 +6,6 @@
   <title>Cart - TechWear Hub</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
   <link rel="stylesheet" href="css/style.css" />
-  <style>
-    /* --- CUSTOM STYLES --- */
-    
-    /* Force main headings to be dark and visible */
-    h2, h3, h4, h5 {
-        color: #111 !important; /* Dark Black */
-    }
-
-    /* Cart Item Container */
-    .cart-item {
-        padding: 1.5rem;
-        border-bottom: 1px solid #e0e0e0; /* Light grey separator */
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #fff; /* Ensure white background */
-    }
-
-    /* Product Name */
-    .cart-item span:first-child {
-        color: #000;       /* Solid Black */
-        font-weight: bold;
-        font-size: 1.1rem;
-    }
-
-    /* Price Tag */
-    .cart-item span:nth-child(2) {
-        color: #333;       /* Dark Grey */
-        font-weight: bold;
-    }
-
-    /* Total Price Area */
-    .cart-total {
-        margin-top: 2rem;
-        font-size: 1.5rem;
-        font-weight: 800;
-        text-align: right;
-        color: #000;       /* Solid Black */
-    }
-    
-    /* Phone Input Styling */
-    .phone-group {
-        display: flex;
-        align-items: center;
-    }
-    .phone-prefix {
-        background-color: #f0f0f0;
-        border: 1px solid #ccc;
-        color: #333;
-        padding: 0.75rem;
-        border-radius: 4px 0 0 4px;
-        font-weight: bold;
-    }
-    .phone-input {
-        border-radius: 0 4px 4px 0 !important;
-        flex-grow: 1;
-        color: #000; /* Ensure typed number is visible */
-    }
-    
-    /* Fix text color inside modals/forms */
-    dialog article, form label, input, textarea {
-        color: #111;
-    }
-
-    /* Modal Styling */
-    dialog article {
-        width: 100%;
-        max-width: 600px;
-        background-color: white; /* Force white card */
-        color: black;
-    }
-  </style>
 </head>
 <body>
 
@@ -96,12 +24,12 @@
     <h2>Your Cart</h2>
     
     <section id="cartList">
-        <p style="color:#333">Loading cart...</p>
+        <p>Loading cart...</p>
     </section>
 
     <div class="cart-total" id="cartTotal"></div>
 
-    <hr>
+    <hr style="border-color: #333;">
     
     <div class="grid">
         <button onclick="openCheckout()" class="contrast">Proceed to Checkout</button>
@@ -113,35 +41,35 @@
     <article>
       <header>
         <a href="#close" aria-label="Close" class="close" onclick="closeCheckout()"></a>
-        <h3 style="margin-bottom:0">Secure Checkout</h3>
+        <h3>Secure Checkout</h3>
       </header>
       
       <form onsubmit="processOrder(event)">
         <h5>Shipping Details</h5>
         <label for="address">Full Address</label>
-        <textarea id="address" placeholder="House No, Street, City, Pincode" required style="background:white; border:1px solid #ccc; color:black;"></textarea>
+        <textarea id="address" placeholder="House No, Street, City, Pincode" required></textarea>
 
         <label for="phone">Phone Number</label>
         <div class="phone-group">
             <span class="phone-prefix">+91</span>
-            <input type="tel" id="phone" class="phone-input" placeholder="98765 43210" pattern="[0-9]{10}" title="Please enter a valid 10-digit number" required style="background:white; border:1px solid #ccc; color:black;">
+            <input type="tel" id="phone" placeholder="98765 43210" pattern="[0-9]{10}" required>
         </div>
 
         <h5 style="margin-top: 1.5rem;">Payment Method</h5>
         <label for="cardName">Name on Card</label>
-        <input type="text" id="cardName" placeholder="ARAVIND K" required style="background:white; border:1px solid #ccc; color:black;">
+        <input type="text" id="cardName" placeholder="ARAVIND K" required>
 
         <label for="cardNumber">Card Number</label>
-        <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required style="background:white; border:1px solid #ccc; color:black;">
+        <input type="text" id="cardNumber" placeholder="0000 0000 0000 0000" maxlength="19" required>
 
         <div class="grid">
             <div>
                 <label for="expiry">Expiry Date</label>
-                <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required style="background:white; border:1px solid #ccc; color:black;">
+                <input type="text" id="expiry" placeholder="MM/YY" maxlength="5" required>
             </div>
             <div>
                 <label for="cvv">CVV</label>
-                <input type="password" id="cvv" placeholder="123" maxlength="3" required style="background:white; border:1px solid #ccc; color:black;">
+                <input type="password" id="cvv" placeholder="123" maxlength="3" required>
             </div>
         </div>
 
@@ -156,7 +84,7 @@
   <script src="js/main.js"></script>
   
   <script>
-    // --- CART PAGE LOGIC ---
+    // Logic to load cart
     document.addEventListener('DOMContentLoaded', () => {
         const cartList = document.getElementById('cartList');
         const cartTotal = document.getElementById('cartTotal');
@@ -164,8 +92,7 @@
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
 
         if (cart.length === 0) {
-            cartList.innerHTML = '<p style="color:#666">Your cart is empty. Go <a href="shop.html">shopping</a>!</p>';
-            cartTotal.style.display = 'none';
+            cartList.innerHTML = '<p>Your cart is empty.</p>';
             return;
         }
 
@@ -179,8 +106,8 @@
             html += `
                 <div class="cart-item">
                     <span>${product.name}</span>
-                    <span>$${price.toFixed(2)}</span>
-                    <a href="#" onclick="removeItem(${index})" style="color:#e53935; font-weight:bold; font-size:0.9em; margin-left:1rem; text-decoration:none;">Remove</a>
+                    <span style="color: #00bcd4; font-weight:bold;">$${price.toFixed(2)}</span>
+                    <a href="#" onclick="removeItem(${index})" style="color:#f44336; margin-left:1rem; font-size:0.9rem">Remove</a>
                 </div>
             `;
         });
@@ -195,40 +122,29 @@
         localStorage.setItem('techWearCart', JSON.stringify(cart));
         window.location.reload();
     }
-
+    
     function clearCart() {
-        if(confirm("Are you sure you want to empty your cart?")) {
-            localStorage.removeItem('techWearCart');
-            window.location.reload();
-        }
+        localStorage.removeItem('techWearCart');
+        window.location.reload();
     }
 
-    // --- CHECKOUT LOGIC ---
+    // Modal Logic
     function openCheckout() {
         let cart = JSON.parse(localStorage.getItem('techWearCart')) || [];
-        if (cart.length === 0) {
-            alert("Your cart is empty!");
-            return;
-        }
-        const modal = document.getElementById('checkoutModal');
-        modal.setAttribute('open', true);
+        if (cart.length > 0) document.getElementById('checkoutModal').setAttribute('open', true);
+        else alert("Cart is empty!");
     }
-
     function closeCheckout() {
-        const modal = document.getElementById('checkoutModal');
-        modal.removeAttribute('open');
+        document.getElementById('checkoutModal').removeAttribute('open');
     }
-
     function processOrder(event) {
         event.preventDefault();
-        const payBtn = document.getElementById('payBtn');
-        payBtn.setAttribute('aria-busy', 'true');
-        payBtn.innerText = 'Processing Payment...';
-
+        const btn = document.getElementById('payBtn');
+        btn.setAttribute('aria-busy', 'true');
+        btn.innerText = "Processing...";
         setTimeout(() => {
-            alert("Payment Successful! Your order has been placed.");
+            alert("Order Placed Successfully!");
             localStorage.removeItem('techWearCart');
-            closeCheckout();
             window.location.href = 'profile.html';
         }, 2000);
     }
