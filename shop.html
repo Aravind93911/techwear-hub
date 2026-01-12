@@ -17,7 +17,6 @@
       margin-top: 2rem;
     }
     
-    /* Image Styling */
     .image-wrapper {
         height: 250px;
         overflow: hidden;
@@ -29,11 +28,8 @@
         object-fit: cover;
         transition: transform 0.3s;
     }
-    .image-wrapper:hover img {
-        transform: scale(1.05);
-    }
+    .image-wrapper:hover img { transform: scale(1.05); }
 
-    /* Card Styling */
     .product-card {
         background: var(--card-background);
         border: 1px solid #30363d;
@@ -73,82 +69,47 @@
   </main>
 
   <script>
-    // 1. THE PRODUCT DATA
+    console.log("Shop Script Started...");
+
+    // 1. DATA (Updated with INR Prices)
     const products = [
-        {
-            id: 1,
-            name: "Smartwatch Pro",
-            price: 199.00,
-            image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80",
-            desc: "OLED display, ECG monitoring, and 3-day battery life."
-        },
-        {
-            id: 2,
-            name: "Sonic Buds",
-            price: 89.99,
-            image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80",
-            desc: "Active Noise Cancellation (ANC) with spatial audio support."
-        },
-        {
-            id: 3,
-            name: "Fitness Band X",
-            price: 49.50,
-            image: "https://images.unsplash.com/photo-1557935728-95d66cb15197?auto=format&fit=crop&w=600&q=80",
-            desc: "Tracks steps, sleep, and heart rate. Waterproof up to 50m."
-        },
-        {
-            id: 4,
-            name: "VR Headset Horizon",
-            price: 299.00,
-            image: "https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80",
-            desc: "Immersive 4K virtual reality experience."
-        },
-        {
-            id: 5,
-            name: "Pro Gaming Mouse",
-            price: 59.99,
-            image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80",
-            desc: "High-precision 25K sensor with customizable RGB."
-        },
-        {
-            id: 6,
-            name: "Mech Keyboard K1",
-            price: 129.00,
-            image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80",
-            desc: "Tactile mechanical switches with aluminum frame."
-        }
+        { id: 1, name: "Smartwatch Pro", price: 15999, image: "https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=600&q=80" },
+        { id: 2, name: "Sonic Buds", price: 6999, image: "https://images.unsplash.com/photo-1590658268037-6bf12165a8df?auto=format&fit=crop&w=600&q=80" },
+        { id: 3, name: "Fitness Band X", price: 3499, image: "https://images.unsplash.com/photo-1557935728-95d66cb15197?auto=format&fit=crop&w=600&q=80" },
+        { id: 4, name: "VR Headset Horizon", price: 24999, image: "https://images.unsplash.com/photo-1622979135225-d2ba269fb1bd?auto=format&fit=crop&w=600&q=80" },
+        { id: 5, name: "Pro Gaming Mouse", price: 4499, image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=600&q=80" },
+        { id: 6, name: "Mech Keyboard K1", price: 9999, image: "https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=600&q=80" }
     ];
 
-    // 2. THE LOADING LOGIC
-    document.addEventListener('DOMContentLoaded', () => {
-        const grid = document.getElementById('productGrid');
+    // 2. RENDER FUNCTION
+    const grid = document.getElementById('productGrid');
+    
+    if(grid) {
+        grid.innerHTML = ''; 
         
-        // Clear the "Loading..." text
-        grid.innerHTML = '';
-
         products.forEach(product => {
-            const card = `
+            // Convert to nice string (e.g., 15,999)
+            const priceString = product.price.toLocaleString('en-IN');
+
+            grid.innerHTML += `
                 <article class="product-card">
                     <div class="image-wrapper">
-                       <a href="product.html?id=${product.id}">
-                           <img src="${product.image}" alt="${product.name}">
-                       </a>
+                       <a href="product.html?id=${product.id}"><img src="${product.image}" alt="${product.name}"></a>
                     </div>
                     <div class="product-details">
-                        <div>
-                            <div style="font-size:1.2rem; font-weight:bold; margin-bottom:0.5rem;">${product.name}</div>
-                            <span style="color:#00bcd4; font-size:1.1rem; font-weight:bold">$${product.price.toFixed(2)}</span>
-                        </div>
-                        <div class="grid" style="gap:10px; margin-top:1.5rem;">
-                            <a href="product.html?id=${product.id}" role="button" class="outline" style="width:100%">Details</a>
+                        <div style="font-weight:bold; font-size:1.1rem">${product.name}</div>
+                        
+                        <div style="color:#00bcd4; font-weight:bold">₹${priceString}</div>
+                        
+                        <div class="grid" style="gap:10px; margin-top:1rem;">
+                            <a href="product.html?id=${product.id}" role="button" class="outline" style="width:100%">View</a>
                             <button onclick="addToCart(${product.id})" style="width:100%">Add</button>
                         </div>
                     </div>
                 </article>
             `;
-            grid.innerHTML += card;
         });
-    });
+    }
 
     // 3. CART FUNCTION
     function addToCart(id) {
