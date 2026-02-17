@@ -85,22 +85,46 @@
 
     <main class="content">
         
-        <div id="tab-dashboard" class="tab-content active">
-            <h2>Live Threat Monitoring</h2>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div style="color: #8b949e;">Total Requests</div>
-                    <div class="stat-number" id="totalReq">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #f85149;">Threats Blocked</div>
-                    <div class="stat-number" id="blockedReq">0</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #2ea043;">AI Confidence</div>
-                    <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
-                </div>
-            </div>
+       <div id="tab-dashboard" class="tab-content active">
+    <h2>Live Threat Monitoring</h2>
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div style="color: #8b949e;">Total Requests</div>
+            <div class="stat-number" id="totalReq">0</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: #f85149;">Threats Blocked</div>
+            <div class="stat-number" id="blockedReq">0</div>
+        </div>
+        <div class="stat-card">
+            <div style="color: #2ea043;">AI Confidence</div>
+            <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
+        </div>
+    </div>
+
+    <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
+        <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
+            <strong>Real-Time Activity Stream</strong>
+            <span class="status-active" style="font-size: 0.8rem;">● LIVE MODE</span>
+        </header>
+        <div style="max-height: 400px; overflow-y: auto;">
+            <table role="grid" style="margin-top: 0;">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Source IP</th>
+                        <th>Event Type</th>
+                        <th>Target</th>
+                        <th>Confidence</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="realtimeLogBody">
+                    </tbody>
+            </table>
+        </div>
+    </article>
+</div>
             <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
                 <canvas id="trafficChart"></canvas>
             </div>
@@ -371,33 +395,58 @@
     }
 
     function startSimulation() {
-        setInterval(() => {
-            totalRequests += Math.floor(Math.random() * 5) + 1;
-            document.getElementById('totalReq').innerText = totalRequests;
-            const time = new Date().toLocaleTimeString();
-            trafficChart.data.labels.push(time);
-            trafficChart.data.datasets[0].data.push(Math.floor(Math.random() * 50) + 10);
-            if(trafficChart.data.labels.length > 20) { trafficChart.data.labels.shift(); trafficChart.data.datasets[0].data.shift(); }
-            trafficChart.update();
-            let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
-            if (realAttacks.length > 0) {
-                const attack = realAttacks.shift();
-                addLog(attack.time, attack.ip, attack.query, "CRITICAL", "BLOCKED");
-                blockedThreats++;
-                document.getElementById('blockedReq').innerText = blockedThreats;
-                localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
-                alert("🚨 ALERT: Real SQL Injection Detected!");
-            }
-        }, 2000);
-    }
+    setInterval(() => {
+        // Update Stats
+        totalRequests += Math.floor(Math.random() * 5) + 1;
+        document.getElementById('totalReq').innerText = totalRequests;
 
-    function addLog(time, ip, query, level, action) {
-        const tbody = document.getElementById('logBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${time}</td><td>${ip}</td><td style="font-family:monospace; color: #8b949e">${query}</td><td style="color:#f85149; font-weight:bold">${level}</td><td style="color:#f85149">${action}</td>`;
-        tbody.prepend(row);
-        if (tbody.children.length > 10) tbody.removeChild(tbody.lastChild);
-    }
+        // Generate Random Log Data
+        const ips = ["192.168.1.45", "10.0.0.12", "45.77.12.11", "172.16.254.1"];
+        const endpoints = ["/api/v1/login", "/products/search", "/admin/config", "/cart/checkout"];
+        const types = ["GET Request", "POST Request", "SQLi Probe", "XSS Attempt"];
+        
+        const randomIp = ips[Math.floor(Math.random() * ips.length)];
+        const randomType = types[Math.floor(Math.random() * types.length)];
+        const randomTarget = endpoints[Math.floor(Math.random() * endpoints.length)];
+        const isThreat = randomType.includes("Probe") || randomType.includes("Attempt");
+
+        addRealtimeLog(
+            new Date().toLocaleTimeString(),
+            randomIp,
+            randomType,
+            randomTarget,
+            isThreat ? "99.2%" : "N/A",
+            isThreat ? "BLOCKED" : "ALLOWED"
+        );
+
+        // Handle blocked counts
+        if (isThreat) {
+            blockedThreats++;
+            document.getElementById('blockedReq').innerText = blockedThreats;
+        }
+    }, 2000);
+}
+
+function addRealtimeLog(time, ip, type, target, confidence, status) {
+    const tbody = document.getElementById('realtimeLogBody');
+    const row = document.createElement('tr');
+    
+    // Severity color coding
+    const statusColor = status === "BLOCKED" ? "#f85149" : "#2ea043";
+    
+    row.innerHTML = `
+        <td>${time}</td>
+        <td><code>${ip}</code></td>
+        <td>${type}</td>
+        <td><code>${target}</code></td>
+        <td>${confidence}</td>
+        <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+    `;
+    
+    tbody.prepend(row);
+    // Keep list manageable (last 15 entries)
+    if (tbody.children.length > 15) tbody.removeChild(tbody.lastChild);
+}
   </script>
 </body>
 </html>
