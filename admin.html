@@ -4,8 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin - Security Operations Center</title>
+    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         body { min-height: 100vh; display: flex; flex-direction: column; }
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
@@ -34,8 +36,8 @@
         <article style="background: #161b22; border: 1px solid #30363d; width: 400px; padding: 2rem;">
             <h3 style="text-align: center; margin-bottom: 2rem;">SECURE ACCESS</h3>
             <form onsubmit="adminLogin(event)">
-                <input type="text" id="adminUser" placeholder="Enter Username" required>
-                <input type="password" id="adminPass" placeholder="Enter Password" required>
+                <input type="text" id="adminUser" placeholder="Enter Username" required autocomplete="off">
+                <input type="password" id="adminPass" placeholder="Enter Password" required autocomplete="off">
                 <button type="submit" class="contrast">Authenticate</button>
             </form>
         </article>
@@ -45,6 +47,7 @@
         <aside class="sidebar">
             <h4 style="color: white; padding-left: 1rem;">SOC Dashboard</h4>
             <hr style="margin: 1rem 0; border-color: #30363d;">
+            
             <nav>
                 <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
                 <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
@@ -55,11 +58,12 @@
             <div style="padding: 1rem; border-top: 1px solid #30363d; margin-top: 1rem;">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" id="protectionToggle" role="switch" onchange="toggleProtection()">
-                    <span id="protectionLabel" style="font-weight: bold; font-size: 0.8rem;">SQL PROTECTION: OFF</span>
+                    <span id="protectionLabel" style="color: #f85149; font-weight: bold; font-size: 0.8rem;">SQL PROTECTION: OFF</span>
                 </label>
             </div>
 
             <div style="margin-top: auto;">
+                <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
                 <a onclick="adminLogout()" style="color: #f85149; cursor:pointer">🚪 Logout</a>
             </div>
         </aside>
@@ -73,7 +77,10 @@
                     <div class="stat-card"><div>AI Confidence</div><div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div></div>
                 </div>
                 <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
-                    <header style="padding: 1rem; border-bottom: 1px solid #30363d;"><strong>Real-Time Activity Stream</strong></header>
+                    <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
+                        <strong>Real-Time Activity Stream</strong>
+                        <span style="color: #2ea043; font-size: 0.8rem;">● LIVE MODE</span>
+                    </header>
                     <table role="grid"><tbody id="realtimeLogBody"></tbody></table>
                 </article>
             </div>
@@ -81,7 +88,9 @@
             <div id="tab-users" class="tab-content">
                 <h2>User Database & Credentials</h2>
                 <table role="grid">
-                    <thead><tr><th>ID</th><th>Username</th><th>Password (Hash)</th><th>Address</th><th>Status</th></tr></thead>
+                    <thead>
+                        <tr><th>ID</th><th>Username</th><th>Password (Hash)</th><th>Address</th><th>Status</th></tr>
+                    </thead>
                     <tbody id="userTableBody"></tbody>
                 </table>
             </div>
@@ -89,7 +98,7 @@
             <div id="tab-logs" class="tab-content">
                 <h2>Security Incident Logs</h2>
                 <table role="grid">
-                    <thead><tr><th>Time</th><th>IP Address</th><th>Query</th><th>Threat</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>IP Address</th><th>Query / Payload</th><th>Threat Level</th><th>Action</th></tr></thead>
                     <tbody id="logBody"></tbody>
                 </table>
             </div>
@@ -124,10 +133,14 @@
         let totalRequests = 0;
         let blockedThreats = 0;
 
+        // --- PERSISTENCE & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
             const savedState = localStorage.getItem('sqlProtectionState') === 'true';
             updateToggleUI(savedState);
-            if (localStorage.getItem('adminSession') === 'active') showDashboard();
+
+            if (localStorage.getItem('adminSession') === 'active') {
+                showDashboard();
+            }
         });
 
         function toggleProtection() {
@@ -146,9 +159,10 @@
             if (checkbox) checkbox.checked = isActive;
         }
 
+        // --- SECURITY ENGINE ---
         function detectSQLi(query) {
             const q = query.toLowerCase();
-            const patterns = [/' OR 1=1 --/i, /admin' --/i, /union select/i];
+            const patterns = [/' OR 1=1 --/i, /admin' --/i, /union select/i, /drop table/i];
             const isMalicious = patterns.some(p => p.test(q));
             return { isMalicious, confidence: isMalicious ? "99.8%" : "0%" };
         }
@@ -174,10 +188,11 @@
                 localStorage.setItem('adminSession', 'active');
                 showDashboard();
             } else {
-                alert("ACCESS DENIED");
+                alert("❌ ACCESS DENIED: Invalid Credentials");
             }
         }
 
+        // --- LOGGING & DASHBOARD LOGIC ---
         function logAttack(query, status) {
             const attack = { time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query, status };
             let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
@@ -196,7 +211,8 @@
             document.getElementById('userTableBody').innerHTML = `
                 <tr><td>#100</td><td>admin</td><td>$2b$12$K9R...</td><td>System Admin</td><td style="color:#2ea043">Active</td></tr>
                 <tr><td>#201</td><td>mounika</td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td style="color:#2ea043">Active</td></tr>
-            `; //
+                <tr><td>#666</td><td>hacker_unknown</td><td>plaintext_123</td><td>Unknown IP</td><td style="color:orange">Suspicious</td></tr>
+            `;
         }
 
         function startSimulation() {
@@ -210,12 +226,16 @@
                     totalRequests++;
                     document.getElementById('totalReq').innerText = totalRequests;
                     document.getElementById('blockedReq').innerText = blockedThreats;
+                } else {
+                    totalRequests += Math.floor(Math.random() * 2);
+                    document.getElementById('totalReq').innerText = totalRequests;
                 }
-            }, 1000);
+            }, 1500);
         }
 
         function addLogToUI(a) {
-            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td>${a.query}</td><td>SQLi</td><td style="color:${a.status.includes('BLOCKED')?'#f85149':'#2ea043'}">${a.status}</td></tr>`;
+            const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
+            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td style="font-family:monospace">${a.query}</td><td>CRITICAL</td><td style="color:${statusColor}; font-weight:bold">${a.status}</td></tr>`;
             document.getElementById('realtimeLogBody').insertAdjacentHTML('afterbegin', row);
             document.getElementById('logBody').insertAdjacentHTML('afterbegin', row);
         }
@@ -229,14 +249,21 @@
 
         function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
 
-        function addNewData() { alert("✅ Data added to training set."); }
+        // --- ML TRAINING LOGIC ---
+        function addNewData() { alert("✅ Data added to training set. Don't forget to Retrain!"); }
         function trainModel() {
+            const btn = document.getElementById('trainBtn');
             const bar = document.getElementById('progressBar');
             document.getElementById('progressContainer').style.display = 'block';
+            btn.disabled = true;
             let w = 0;
             const i = setInterval(() => {
-                if (w >= 100) { clearInterval(i); alert("✅ Model Retrained."); }
-                else { w++; bar.style.width = w + '%'; }
+                if (w >= 100) { 
+                    clearInterval(i); 
+                    alert("✅ AI Model successfully retrained."); 
+                    document.getElementById('progressContainer').style.display = 'none';
+                    btn.disabled = false;
+                } else { w++; bar.style.width = w + '%'; }
             }, 30);
         }
     </script>
