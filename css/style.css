@@ -1,138 +1,125 @@
-/* css/style.css - PREMIUM DARK THEME */
-
-:root {
-  --primary: #00bcd4;        /* Cyan Blue for Tech feel */
-  --primary-hover: #00acc1;
-  --background-color: #0f1115; /* Deep Black/Blue background */
-  --card-background: #161b22;  /* Slightly lighter for cards */
-  --text-color: #e0e0e0;       /* Off-white text */
-  --muted-color: #8b949e;      /* Grey for secondary text */
-  --border-color: #30363d;     /* Dark borders */
-}
-
-/* 1. GLOBAL RESET */
 body {
-  background-color: var(--background-color);
-  color: var(--text-color);
-  font-family: system-ui, -apple-system, sans-serif;
-}
-
-/* 2. NAVIGATION BAR */
-nav {
-  background-color: rgba(22, 27, 34, 0.95); /* Semi-transparent dark */
-  border-bottom: 1px solid var(--border-color);
-  padding: 1rem;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
-}
-
-nav strong { color: #fff; font-size: 1.2rem; letter-spacing: 1px; }
-nav a { color: var(--text-color); transition: color 0.2s; }
-nav a:hover { color: var(--primary); text-decoration: none; }
-
-/* 3. CARDS (Shop & Admin) */
-article, .card, .stat-card, .login-card {
-  background-color: var(--card-background);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-  color: var(--text-color);
-}
-
-/* 4. IMAGES */
-img { border-radius: 4px; }
-
-/* 5. FORMS & INPUTS (Crucial for Dark Mode) */
-input, select, textarea {
-  background-color: #0d1117 !important;
-  border: 1px solid var(--border-color) !important;
-  color: #fff !important;
-}
-
-input::placeholder { color: #6e7681; }
-
-/* 6. BUTTONS */
-button, a[role="button"] {
-  background-color: var(--primary);
-  border: none;
-  color: #000; /* Black text on bright buttons looks premium */
-  font-weight: bold;
-}
-button.outline, a[role="button"].outline {
-  background-color: transparent;
-  border: 1px solid var(--primary);
-  color: var(--primary);
-}
-button.contrast {
-  background-color: #fff;
-  color: #000;
-}
-
-/* 7. CART PAGE SPECIFIC */
-.cart-item {
-  background-color: var(--card-background);
-  border: 1px solid var(--border-color);
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.cart-total {
-  color: var(--primary);
-  font-size: 1.8rem;
-  text-align: right;
-  margin-top: 2rem;
-  font-weight: 800;
-}
-
-/* 8. MODALS (Checkout) */
-dialog article {
-  background-color: var(--card-background) !important;
-  color: var(--text-color) !important;
-  border: 1px solid var(--border-color);
-}
-dialog header {
-  border-bottom: 1px solid var(--border-color);
-}
-
-/* 9. PHONE INPUT GROUP */
-.phone-group { display: flex; }
-.phone-prefix {
-  background-color: #21262d;
-  border: 1px solid var(--border-color);
-  color: #fff;
-  padding: 0.7rem;
-  display: flex; align-items: center;
-}
-
-/* --- FIX FOR SQUEEZED GRID --- */
-#productGrid {
-  display: grid;
-  /* This tells the browser: "Don't squash them! Wrap to next line if needed." */
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
-  gap: 2rem;
-  margin-top: 2rem;
-}
-
-/* Ensure images fit the card correctly */
-.image-wrapper img {
-  width: 100%;
-  height: 250px;
-  object-fit: cover;
-}
-
-/* Fix buttons stacking weirdly */
-.product-details .grid {
-    display: flex; 
-    gap: 10px;
-}
-.product-details .grid button, 
-.product-details .grid a {
-    width: 100%;
     margin: 0;
+    background: #0d1117;
+}
+
+/* LOGIN */
+#login-overlay {
+    position: fixed;
+    inset: 0;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 999;
+}
+
+.login-box {
+    width: 400px;
+    padding: 2rem;
+    background: #161b22;
+    border: 1px solid #30363d;
+    text-align: center;
+}
+
+/* LAYOUT */
+.admin-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    height: 100vh;
+}
+
+.hidden {
+    display: none;
+}
+
+/* SIDEBAR */
+.sidebar {
+    background: #161b22;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar nav a {
+    display: block;
+    padding: 0.7rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+    color: #8b949e;
+    cursor: pointer;
+}
+
+.sidebar nav a.active,
+.sidebar nav a:hover {
+    background: #1f6feb;
+    color: white;
+}
+
+.toggle-area {
+    margin-top: 1rem;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+}
+
+/* CONTENT */
+.content {
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+.tab {
+    display: none;
+}
+
+.tab.active {
+    display: block;
+}
+
+/* CARDS */
+.stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px,1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: #161b22;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* CHART */
+.chart-box {
+    margin-top: 2rem;
+    height: 300px;
+}
+
+/* TABLES */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 0.6rem;
+    border-bottom: 1px solid #30363d;
+}
+
+/* PROGRESS */
+.progress {
+    margin-top: 1rem;
+    background: #30363d;
+    height: 20px;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+#progressBar {
+    width: 0%;
+    height: 100%;
+    background: #2ea043;
 }
