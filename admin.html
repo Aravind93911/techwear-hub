@@ -1,452 +1,217 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Admin - Security Operations Center</title>
-  
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-  <style>
-    /* Admin Specific Styling */
-    body { min-height: 100vh; display: flex; flex-direction: column; }
-    
-    #login-overlay {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: black; z-index: 9999;
-        display: flex; align-items: center; justify-content: center;
-    }
-    
-    .admin-layout { display: none; height: 100vh; grid-template-columns: 250px 1fr; }
-    
-    .sidebar { background: #161b22; border-right: 1px solid #30363d; padding: 2rem 1rem; display: flex; flex-direction: column; }
-    .sidebar a {
-        display: block; padding: 0.75rem 1rem; color: #8b949e; text-decoration: none;
-        border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s;
-    }
-    .sidebar a:hover { background: #21262d; color: white; }
-    .sidebar a.active { background: #1f6feb; color: white; font-weight: bold; }
-    
-    .content { padding: 2rem; overflow-y: auto; background: #0d1117; }
-    
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
-    .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
-    .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; margin: 0.5rem 0; }
-    
-    .tab-content { display: none; animation: fadeIn 0.3s; }
-    .tab-content.active { display: block; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-    th { text-align: left; border-bottom: 1px solid #30363d; padding: 1rem; color: #8b949e; }
-    td { padding: 1rem; border-bottom: 1px solid #21262d; }
-    
-    .status-active { color: #2ea043; font-weight: bold; }
-    .status-banned { color: #f85149; font-weight: bold; }
-
-    /* ML Training Bar */
-    .progress-container { width: 100%; background-color: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
-    .progress-bar { width: 0%; height: 20px; background-color: #2ea043; border-radius: 10px; transition: width 0.5s; }
-
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  </style>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Security Operations Center</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { min-height: 100vh; display: flex; flex-direction: column; }
+        #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .admin-layout { display: none; height: 100vh; grid-template-columns: 250px 1fr; }
+        .sidebar { background: #161b22; border-right: 1px solid #30363d; padding: 2rem 1rem; display: flex; flex-direction: column; }
+        .sidebar a { display: block; padding: 0.75rem 1rem; color: #8b949e; text-decoration: none; border-radius: 6px; margin-bottom: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .sidebar a:hover { background: #21262d; color: white; }
+        .sidebar a.active { background: #1f6feb; color: white; font-weight: bold; }
+        .content { padding: 2rem; overflow-y: auto; background: #0d1117; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
+        .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; margin: 0.5rem 0; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .status-active { color: #2ea043; font-weight: bold; }
+        .status-blocked { color: #f85149; font-weight: bold; }
+        .progress-container { width: 100%; background: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
+        .progress-bar { width: 0%; height: 20px; background: #2ea043; border-radius: 10px; transition: width 0.3s; }
+    </style>
 </head>
 <body>
 
-  <div id="login-overlay">
-    <article style="background: #161b22; border: 1px solid #30363d; width: 400px; padding: 2rem;">
-        <h3 style="text-align: center; margin-bottom: 2rem;">SECURE ACCESS</h3>
-        <form onsubmit="adminLogin(event)">
-            <input type="text" id="adminUser" placeholder="Enter Username" required autocomplete="off">
-            <input type="password" id="adminPass" placeholder="Enter Password" required autocomplete="off">
-            <button type="submit" class="contrast">Authenticate</button>
-        </form>
-    </article>
-  </div>
-
-  <div id="adminPanel" class="admin-layout">
-    
-    <aside class="sidebar">
-        <h4 style="color: white; padding-left: 1rem;">SOC Dashboard</h4>
-        <hr style="margin: 1rem 0; border-color: #30363d;">
-        
-        <nav>
-            <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
-            <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
-            <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
-            <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Model Training</a>
-        </nav>
-
-        <div style="margin-top: auto;">
-            <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
-            <a onclick="adminLogout()" style="color: #f85149;">🚪 Logout</a>
-        </div>
-    </aside>
-
-    <main class="content">
-        
-       <div id="tab-dashboard" class="tab-content active">
-    <h2>Live Threat Monitoring</h2>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div style="color: #8b949e;">Total Requests</div>
-            <div class="stat-number" id="totalReq">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #f85149;">Threats Blocked</div>
-            <div class="stat-number" id="blockedReq">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #2ea043;">AI Confidence</div>
-            <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
-        </div>
+    <div id="login-overlay">
+        <article style="background: #161b22; width: 400px; padding: 2rem;">
+            <h3 style="text-align: center;">SECURE ACCESS</h3>
+            <form onsubmit="adminLogin(event)">
+                <input type="text" id="adminUser" placeholder="Username" required>
+                <input type="password" id="adminPass" placeholder="Password" required>
+                <button type="submit" class="contrast">Authenticate</button>
+            </form>
+        </article>
     </div>
 
-    <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
-        <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
-            <strong>Real-Time Activity Stream</strong>
-            <span class="status-active" style="font-size: 0.8rem;">● LIVE MODE</span>
-        </header>
-        <div style="max-height: 400px; overflow-y: auto;">
-            <table role="grid" style="margin-top: 0;">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Source IP</th>
-                        <th>Event Type</th>
-                        <th>Target</th>
-                        <th>Confidence</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="realtimeLogBody">
-                    </tbody>
-            </table>
-        </div>
-    </article>
-</div>
-            <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
-                <canvas id="trafficChart"></canvas>
-            </div>
-        </div>
+    <div id="adminPanel" class="admin-layout">
+        <aside class="sidebar">
+            <h4 style="color: white; padding-left: 1rem;">SOC Dashboard</h4>
+            <nav>
+                <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
+                <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
+                <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
+                <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Model Training</a>
+            </nav>
 
-        <div id="tab-users" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>User Database</h2>
-                <button id="refreshBtn" class="outline" onclick="manualRefresh()">↻ Refresh List</button>
-            </div>
-            <table role="grid">
-                <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Status</th><th>Action</th></tr></thead>
-                <tbody id="userTableBody"></tbody>
-            </table>
-            <p id="emptyMsg" style="text-align:center; color:#666; display:none; margin-top:2rem">No users found.</p>
-        </div>
-
-        <div id="tab-logs" class="tab-content">
-            <h2>Security Logs</h2>
-            <table role="grid">
-                <thead><tr><th>Time</th><th>IP Address</th><th>Query / Payload</th><th>Threat Level</th><th>Action</th></tr></thead>
-                <tbody id="logBody"></tbody>
-            </table>
-        </div>
-
-        <div id="tab-ml" class="tab-content">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2>SQL Injection Detection Model (v2.1)</h2>
-                <div class="status-badge" style="background:#a371f7">● Active</div>
+            <div style="padding: 1rem; border-top: 1px solid #30363d; margin-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="protectionToggle" role="switch" onchange="toggleProtection()">
+                    <span id="protectionLabel" style="color: #f85149; font-weight: bold; font-size: 0.8rem;">SQL PROTECTION: OFF</span>
+                </label>
             </div>
 
-            <div class="stats-grid" style="margin-top: 2rem;">
-                <div class="stat-card">
-                    <div style="color: #8b949e;">Training Samples</div>
-                    <div class="stat-number" id="sampleCount">15,402</div>
+            <div style="margin-top: auto;">
+                <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
+                <a onclick="adminLogout()" style="color: #f85149; cursor:pointer">🚪 Logout</a>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div id="tab-dashboard" class="tab-content active">
+                <h2>Live Threat Monitoring</h2>
+                <div class="stats-grid">
+                    <div class="stat-card"><div>Total Requests</div><div class="stat-number" id="totalReq">0</div></div>
+                    <div class="stat-card"><div>Threats Blocked</div><div class="stat-number" id="blockedReq" style="color:#f85149">0</div></div>
                 </div>
-                <div class="stat-card">
-                    <div style="color: #2ea043;">Precision</div>
-                    <div class="stat-number">98.2%</div>
-                </div>
-                <div class="stat-card">
-                    <div style="color: #f85149;">False Positives</div>
-                    <div class="stat-number">0.1%</div>
-                </div>
+                <article style="background: #161b22; padding: 0;">
+                    <header style="padding: 1rem;"><strong>Real-Time Activity Stream</strong></header>
+                    <table role="grid"><tbody id="realtimeLogBody"></tbody></table>
+                </article>
             </div>
 
-            <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
-                <header><strong>Add New Training Data</strong></header>
-                <div class="grid">
-                    <div>
-                        <label for="newQuery">Attack / Query Pattern</label>
-                        <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
-                    </div>
-                    <div>
-                        <label for="newLabel">Classification</label>
-                        <select id="newLabel">
-                            <option value="1">Malicious (Attack)</option>
-                            <option value="0">Safe (Normal)</option>
-                        </select>
-                    </div>
-                </div>
-                <button onclick="addNewData()" class="secondary outline" style="width: auto;">+ Add to Dataset</button>
-            </article>
+            <div id="tab-users" class="tab-content">
+                <h2>User Database & Credentials</h2>
+                <table role="grid">
+                    <thead><tr><th>ID</th><th>User</th><th>Password (Hash)</th><th>Location</th><th>Action</th></tr></thead>
+                    <tbody id="userTableBody"></tbody>
+                </table>
+            </div>
 
-            <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
-                <header><strong>Model Retraining</strong></header>
-                <p>Retrain the classifier using the latest captured attack vectors.</p>
-                <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
-                
-                <div class="progress-container" id="progressContainer">
-                    <div class="progress-bar" id="progressBar"></div>
-                    <small id="progressText" style="display:block; text-align:center; margin-top:5px; color:#2ea043">Initializing...</small>
-                </div>
-            </article>
+            <div id="tab-logs" class="tab-content">
+                <h2>Security Incident Logs</h2>
+                <table role="grid">
+                    <thead><tr><th>Time</th><th>IP</th><th>Payload</th><th>Status</th></tr></thead>
+                    <tbody id="logBody"></tbody>
+                </table>
+            </div>
 
-            <h4 style="margin-top: 2rem;">Training Dataset (Preview)</h4>
-            <table role="grid">
-                <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
-                <tbody id="mlTableBody">
-                    <tr><td>Normal</td><td style="font-family:monospace">SELECT * FROM users WHERE id = 5</td><td style="color:#2ea043">Safe (0)</td></tr>
-                    <tr><td>Attack</td><td style="font-family:monospace">' OR 1=1 --</td><td style="color:#f85149">Malicious (1)</td></tr>
-                    <tr><td>Attack</td><td style="font-family:monospace">UNION SELECT user, pass FROM admins</td><td style="color:#f85149">Malicious (1)</td></tr>
-                    <tr><td>Normal</td><td style="font-family:monospace">SELECT name FROM products WHERE category = 'watch'</td><td style="color:#2ea043">Safe (0)</td></tr>
-                </tbody>
-            </table>
-        </div>
+            <div id="tab-ml" class="tab-content">
+                <h2>AI Model Training (v2.1)</h2>
+                <article>
+                    <header><strong>Model Retraining</strong></header>
+                    <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
+                    <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+                </article>
+            </div>
+        </main>
+    </div>
 
-    </main>
-  </div>
+    <script>
+        let totalRequests = 0;
+        let blockedThreats = 0;
+        let isProtectionActive = localStorage.getItem('sqlProtectionState') === 'true';
 
-  <script>
-    let totalRequests = 0;
-    let blockedThreats = 0;
-    let trafficChart;
-    
-    document.addEventListener('DOMContentLoaded', () => {
-        if (localStorage.getItem('adminSession') === 'active') {
-            showDashboard();
-        }
-    });
+        document.addEventListener('DOMContentLoaded', () => {
+            updateToggleUI(isProtectionActive);
+            if (localStorage.getItem('adminSession') === 'active') showDashboard();
+        });
 
-    function adminLogin(e) {
-        e.preventDefault();
-        const u = document.getElementById('adminUser').value;
-        const p = document.getElementById('adminPass').value;
-        if (u === 'admin' && p === 'admin123') {
-            localStorage.setItem('adminSession', 'active');
-            showDashboard();
-        } else {
-            alert("❌ ACCESS DENIED: Invalid Credentials");
-        }
-    }
-
-    function showDashboard() {
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'grid';
-        initChart();
-        startSimulation();
-        loadUsers(); 
-    }
-
-    function adminLogout() {
-        localStorage.removeItem('adminSession');
-        window.location.reload();
-    }
-
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
-
-        const tab = document.getElementById('tab-' + tabName);
-        const nav = document.getElementById('nav-' + tabName);
-        
-        if (tab) tab.classList.add('active');
-        if (nav) nav.classList.add('active');
-        if(tabName === 'users') loadUsers();
-    }
-
-    // --- NEW: ADD DATA FUNCTION ---
-    function addNewData() {
-        const queryInput = document.getElementById('newQuery');
-        const labelSelect = document.getElementById('newLabel');
-        const table = document.getElementById('mlTableBody');
-        const countDisplay = document.getElementById('sampleCount');
-
-        if(queryInput.value === "") {
-            alert("Please enter a query pattern.");
-            return;
+        function toggleProtection() {
+            const checkbox = document.getElementById('protectionToggle');
+            isProtectionActive = checkbox.checked;
+            localStorage.setItem('sqlProtectionState', isProtectionActive);
+            updateToggleUI(isProtectionActive);
         }
 
-        // 1. Determine Style
-        const isAttack = labelSelect.value === "1";
-        const typeText = isAttack ? "Attack" : "Normal";
-        const labelText = isAttack ? "Malicious (1)" : "Safe (0)";
-        const labelColor = isAttack ? "#f85149" : "#2ea043";
-
-        // 2. Add Row
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${typeText}</td>
-            <td style="font-family:monospace">${queryInput.value}</td>
-            <td style="color:${labelColor}">${labelText}</td>
-        `;
-        
-        // Add to TOP of table
-        table.prepend(row);
-
-        // 3. Update Count
-        let currentCount = parseInt(countDisplay.innerText.replace(/,/g, ''));
-        countDisplay.innerText = (currentCount + 1).toLocaleString();
-
-        // 4. Clear Input
-        queryInput.value = "";
-        alert("✅ Data added to training set. Don't forget to Retrain Model!");
-    }
-
-    // --- ML TRAINING SIMULATION ---
-    function trainModel() {
-        const btn = document.getElementById('trainBtn');
-        const container = document.getElementById('progressContainer');
-        const bar = document.getElementById('progressBar');
-        const text = document.getElementById('progressText');
-
-        btn.disabled = true;
-        btn.innerText = "Training in Progress...";
-        container.style.display = 'block';
-        
-        let width = 0;
-        const interval = setInterval(() => {
-            if (width >= 100) {
-                clearInterval(interval);
-                text.innerText = "Training Complete! Model Updated (v2.3)";
-                btn.innerText = "Model Up to Date";
-                setTimeout(() => {
-                    container.style.display = 'none';
-                    btn.disabled = false;
-                    btn.innerText = "Start Training";
-                    alert("✅ AI Model successfully retrained with new dataset.");
-                }, 2000);
-            } else {
-                width++;
-                bar.style.width = width + '%';
-                if(width < 30) text.innerText = "Vectorizing SQL Queries...";
-                else if(width < 70) text.innerText = "Training Random Forest Classifier...";
-                else text.innerText = "Validating Accuracy...";
+        function updateToggleUI(isActive) {
+            const label = document.getElementById('protectionLabel');
+            const checkbox = document.getElementById('protectionToggle');
+            if (label) {
+                label.innerText = isActive ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
+                label.style.color = isActive ? "#2ea043" : "#f85149";
             }
-        }, 50); 
-    }
+            if (checkbox) checkbox.checked = isActive;
+        }
 
-    // --- REFRESH LOGIC ---
-    function manualRefresh() {
-        const btn = document.getElementById('refreshBtn');
-        const originalText = btn.innerText;
-        btn.setAttribute('aria-busy', 'true');
-        btn.innerText = "Scanning...";
-        document.getElementById('userTableBody').innerHTML = '';
-        setTimeout(() => {
+        function adminLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('adminUser').value;
+            const p = document.getElementById('adminPass').value;
+
+            if (isProtectionActive && (u.includes("'") || u.includes("--"))) {
+                logAttack(u, "BLOCKED");
+                alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
+                return;
+            }
+
+            if ((u === 'admin' && p === 'admin123') || u.includes("' OR 1=1")) {
+                if (u.includes("' OR 1=1")) logAttack(u, "ALLOWED (Vulnerable)");
+                localStorage.setItem('adminSession', 'active');
+                showDashboard();
+            } else { alert("ACCESS DENIED"); }
+        }
+
+        function logAttack(query, status) {
+            const attack = { time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query, status };
+            let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+            logs.push(attack);
+            localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
+        }
+
+        function showDashboard() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'grid';
             loadUsers();
-            btn.removeAttribute('aria-busy');
-            btn.innerText = "✅ Updated";
-            setTimeout(() => { btn.innerText = originalText; }, 1000);
-        }, 500);
-    }
-
-    function loadUsers() {
-        const tbody = document.getElementById('userTableBody');
-        tbody.innerHTML = ''; 
-        let allUsers = [{ id: 100, user: "admin", role: "Administrator", status: "Active" }];
-        const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
-        registeredUsers.forEach((u, index) => {
-            allUsers.push({ id: 201 + index, user: u.username, role: "Customer", status: "Active" });
-        });
-        allUsers.push({ id: 666, user: "hacker_unknown", role: "Unverified", status: "Suspicious" });
-
-        if(allUsers.length === 0) {
-            document.getElementById('emptyMsg').style.display = 'block';
-        } else {
-            document.getElementById('emptyMsg').style.display = 'none';
-            allUsers.forEach(u => {
-                let statusClass = u.status === 'Active' ? 'status-active' : 'status-banned';
-                if (u.status === 'Suspicious') statusClass = 'color: orange; font-weight:bold;';
-                const row = document.createElement('tr');
-                row.innerHTML = `<td>#${u.id}</td><td><strong>${u.user}</strong></td><td>${u.role}</td><td style="${statusClass.includes(':') ? statusClass : ''}" class="${!statusClass.includes(':') ? statusClass : ''}">${u.status}</td><td>${u.user === 'admin' ? '<span style="color:#666">Protected</span>' : `<button class="outline contrast" style="padding:5px 10px; font-size:0.8rem" onclick="blockUser(this)">Block Access</button>`}</td>`;
-                tbody.appendChild(row);
-            });
+            startSimulation();
         }
-    }
 
-    function blockUser(btn) {
-        if(confirm("Are you sure you want to blacklist this IP/User?")) {
-            const row = btn.closest('tr');
-            row.cells[3].innerText = "BANNED";
-            row.cells[3].style.color = "#f85149";
-            btn.innerText = "Unblock";
-            btn.setAttribute('disabled', 'true'); 
-            blockedThreats++;
-            document.getElementById('blockedReq').innerText = blockedThreats;
+        function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            const users = [
+                { id: 100, user: "admin", pass: "$2b$12$K9R...", loc: "System Admin", role: "admin" },
+                { id: 201, user: "mounika", pass: "$2b$10$e9x...", loc: "Hyderabad, India", role: "user" }
+            ];
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>#${u.id}</td><td><strong>${u.user}</strong></td><td><code>${u.pass}</code></td><td>${u.loc}</td>
+                    <td>${u.role === 'admin' ? '<em>Protected</em>' : '<button class="outline" onclick="this.innerText=\'Blocked\'; this.style.color=\'red\'">Block Access</button>'}</td>
+                </tr>`).join('');
         }
-    }
 
-    function initChart() {
-        const ctx = document.getElementById('trafficChart').getContext('2d');
-        trafficChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ label: 'Traffic', borderColor: '#2ea043', backgroundColor: 'rgba(46, 160, 67, 0.1)', data: [], tension: 0.4, fill: true }] },
-            options: { responsive: true, maintainAspectRatio: false, scales: { x: { display: false }, y: { display: true } }, plugins: { legend: { display: false } }, animation: { duration: 0 } }
-        });
-    }
-
-    function startSimulation() {
-    setInterval(() => {
-        // Update Stats
-        totalRequests += Math.floor(Math.random() * 5) + 1;
-        document.getElementById('totalReq').innerText = totalRequests;
-
-        // Generate Random Log Data
-        const ips = ["192.168.1.45", "10.0.0.12", "45.77.12.11", "172.16.254.1"];
-        const endpoints = ["/api/v1/login", "/products/search", "/admin/config", "/cart/checkout"];
-        const types = ["GET Request", "POST Request", "SQLi Probe", "XSS Attempt"];
-        
-        const randomIp = ips[Math.floor(Math.random() * ips.length)];
-        const randomType = types[Math.floor(Math.random() * types.length)];
-        const randomTarget = endpoints[Math.floor(Math.random() * endpoints.length)];
-        const isThreat = randomType.includes("Probe") || randomType.includes("Attempt");
-
-        addRealtimeLog(
-            new Date().toLocaleTimeString(),
-            randomIp,
-            randomType,
-            randomTarget,
-            isThreat ? "99.2%" : "N/A",
-            isThreat ? "BLOCKED" : "ALLOWED"
-        );
-
-        // Handle blocked counts
-        if (isThreat) {
-            blockedThreats++;
-            document.getElementById('blockedReq').innerText = blockedThreats;
+        function startSimulation() {
+            setInterval(() => {
+                let attacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+                if (attacks.length > 0) {
+                    const a = attacks.shift();
+                    addLogToUI(a);
+                    localStorage.setItem('simulatedAttacks', JSON.stringify(attacks));
+                    if (a.status === "BLOCKED") blockedThreats++;
+                    totalRequests++;
+                } else { totalRequests += Math.floor(Math.random() * 2); }
+                document.getElementById('totalReq').innerText = totalRequests;
+                document.getElementById('blockedReq').innerText = blockedThreats;
+            }, 1000);
         }
-    }, 2000);
-}
 
-function addRealtimeLog(time, ip, type, target, confidence, status) {
-    const tbody = document.getElementById('realtimeLogBody');
-    const row = document.createElement('tr');
-    
-    // Severity color coding
-    const statusColor = status === "BLOCKED" ? "#f85149" : "#2ea043";
-    
-    row.innerHTML = `
-        <td>${time}</td>
-        <td><code>${ip}</code></td>
-        <td>${type}</td>
-        <td><code>${target}</code></td>
-        <td>${confidence}</td>
-        <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
-    `;
-    
-    tbody.prepend(row);
-    // Keep list manageable (last 15 entries)
-    if (tbody.children.length > 15) tbody.removeChild(tbody.lastChild);
-}
-  </script>
+        function addLogToUI(a) {
+            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td><code>${a.query}</code></td><td style="color:${a.status==='BLOCKED'?'#f85149':'#2ea043'}">${a.status}</td></tr>`;
+            document.getElementById('realtimeLogBody').insertAdjacentHTML('afterbegin', row);
+            document.getElementById('logBody').insertAdjacentHTML('afterbegin', row);
+        }
+
+        function switchTab(t) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + t).classList.add('active');
+            document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + t).classList.add('active');
+        }
+
+        function trainModel() {
+            document.getElementById('progressContainer').style.display = 'block';
+            let w = 0;
+            const i = setInterval(() => {
+                if (w >= 100) { clearInterval(i); alert("Model Retrained!"); }
+                else { w += 5; document.getElementById('progressBar').style.width = w + '%'; }
+            }, 100);
+        }
+
+        function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
+    </script>
 </body>
 </html>
