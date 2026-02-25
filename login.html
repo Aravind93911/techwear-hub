@@ -93,22 +93,58 @@
         const passVal = document.getElementById('password').value;
         const btn = document.getElementById('loginBtn');
 
-        // --- A. SQL INJECTION CHECK (Send to Admin) ---
-        const cleanUser = userVal.toUpperCase();
-        const sqlPatterns = ["' OR 1=1", "' OR '1'='1", "UNION SELECT", "DROP TABLE", "--"];
-        
-        if (sqlPatterns.some(pattern => cleanUser.includes(pattern))) {
-            alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!");
-            
-            // Log locally
-            let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
-            attackLogs.push({ time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query: userVal, type: "SQL Injection" });
-            localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
+        // --- 1. PERSISTENT PROTECTION CHECK ---
+        // Checks if the toggle was turned ON in admin.html
+        const isProtectionActive = localStorage.getItem('sqlProtectionState') === 'true';
+        const isAttack = userVal.includes("' OR 1=1") || userVal.includes("--");
 
+        if (isProtectionActive && isAttack) {
+            alert("⚠️ SECURITY ALERT: SQL Injection Attempt Blocked by AI Model!");
+            
+            // Log the blocked attack for the Admin Dashboard
+            logAttackToDashboard(userVal, "BLOCKED");
+            
             // Send Email to ADMIN
-            sendEmail(ADMIN_EMAIL, "🚨 SQL Injection Alert", `Attack detected using query: ${userVal}`);
+            sendEmail(ADMIN_EMAIL, "🚨 SQL Injection Blocked", `AI Model blocked an attack: ${userVal}`);
             return;
         }
+
+        // --- 2. AUTHENTICATION CHECK ---
+        const isBypass = userVal.includes("' OR 1=1");
+
+        // Admin Access (or Vulnerable Bypass if Protection is OFF)
+        if ((userVal === 'admin' && passVal === 'admin123') || isBypass) {
+            if (isBypass) {
+                logAttackToDashboard(userVal, "ALLOWED (Vulnerable)");
+            }
+            localStorage.setItem('adminSession', 'active');
+            localStorage.setItem('currentUser', 'Administrator');
+            window.location.href = 'admin.html'; // Redirect directly to Admin Page
+            return;
+        }
+
+        // Check Registered Users
+        let userDB = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+        const targetUser = userDB.find(u => u.username === userVal);
+
+        if (targetUser && targetUser.password === passVal) {
+            localStorage.setItem('currentUser', targetUser.username);
+            window.location.href = 'profile.html'; 
+        } else {
+            alert("❌ Login Failed: Invalid Credentials.");
+        }
+    }
+
+    function logAttackToDashboard(query, status) {
+        let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        attackLogs.push({ 
+            time: new Date().toLocaleTimeString(), 
+            ip: "192.168.1.105", 
+            query: query, 
+            status: status 
+        });
+        localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
+    }
 
         // --- B. AUTHENTICATION CHECK ---
 
