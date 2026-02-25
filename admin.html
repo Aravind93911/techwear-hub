@@ -76,6 +76,12 @@
             <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
             <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Model Training</a>
         </nav>
+      <div style="padding: 1rem; border-top: 1px solid #30363d; margin-top: 1rem;">
+    <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+        <input type="checkbox" id="protectionToggle" role="switch" onchange="toggleProtection()">
+        <span id="protectionLabel" style="color: #f85149; font-weight: bold;">AI PROTECTION: OFF</span>
+    </label>
+</div>
 
         <div style="margin-top: auto;">
             <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
