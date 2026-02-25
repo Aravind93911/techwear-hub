@@ -9,13 +9,15 @@ let threatPieChart;
 const safeQueries = ["/shop?id=12", "/search?q=watch", "/login", "/home", "/cart"];
 const attackQueries = ["' OR 1=1 --", "UNION SELECT user, pass", "DROP TABLE users;", "admin' --"];
 
-// --- 1. SESSION MANAGEMENT (THE FIX) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if admin is ALREADY logged in
-    const isAdmin = localStorage.getItem('adminSession');
+    // 1. Retrieve the saved state (defaults to false if never set)
+    const savedState = localStorage.getItem('sqlProtectionState') === 'true';
     
-    if (isAdmin === 'active') {
-        // Skip login screen
+    // 2. Apply the saved state to the UI
+    updateToggleUI(savedState);
+
+    // ... rest of your existing DOMContentLoaded code (initCharts, etc.)
+});
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'grid';
         
@@ -25,43 +27,72 @@ document.addEventListener('DOMContentLoaded', () => {
         startSimulation();
     }
 });
+let isProtectionActive = false; 
 
+// --- TOGGLE FUNCTION ---
+function toggleProtection() {
+    const checkbox = document.getElementById('protectionToggle');
+    const label = document.getElementById('protectionLabel');
+    
+    if (!checkbox || !label) return;
+
+    // Save the state to the browser's memory
+    localStorage.setItem('sqlProtectionState', checkbox.checked);
+    
+    // Update the UI
+    updateToggleUI(checkbox.checked);
+}
+
+// Helper to update text and colors
+function updateToggleUI(isActive) {
+    const label = document.getElementById('protectionLabel');
+    const checkbox = document.getElementById('protectionToggle');
+    
+    if (isActive) {
+        label.innerText = "SQL PROTECTION: ON";
+        label.style.color = "#2ea043";
+        if(checkbox) checkbox.checked = true;
+    } else {
+        label.innerText = "SQL PROTECTION: OFF";
+        label.style.color = "#f85149";
+        if(checkbox) checkbox.checked = false;
+    }
+}
+
+// --- LOGIN FUNCTION ---
 function adminLogin(e) {
     e.preventDefault();
     const u = document.getElementById('adminUser').value;
     const p = document.getElementById('adminPass').value;
 
-    // 1. Check for SQL Injection first
-    const analysis = detectSQLi(u + " " + p); 
-
-    if (analysis.isMalicious) {
-        // 2. Create an attack record
-        const attackEvent = {
-            time: new Date().toLocaleTimeString(),
-            ip: "Your Local IP", // In a real app, this would be the user's IP
-            query: u,
-            type: "SQL Injection Attempt",
-            target: "/admin-login",
-            confidence: analysis.confidence + "%"
-        };
-
-        // 3. Save to localStorage so the Dashboard can see it
-        let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
-        logs.push(attackEvent);
-        localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
-
-        alert("🚨 SECURITY ALERT: Malicious activity detected and logged.");
-        return; // Stop the login process
+    // ONLY check for attacks if the protection is ON
+    if (isProtectionActive) {
+        const analysis = detectSQLi(u + " " + p);
+        if (analysis.isMalicious) {
+            // Log it as BLOCKED
+            logAttackToStorage(u, "BLOCKED", analysis.confidence);
+            alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
+            return; // Stops the login
+        }
     }
 
-    // 4. Normal login check
-    if (u === 'admin' && p === 'admin123') {
+    // IF PROTECTION IS OFF (OR QUERY IS SAFE):
+    // Check if it's the admin OR a demo bypass
+    const isBypass = u.includes("' OR 1=1");
+    
+    if ((u === 'admin' && p === 'admin123') || isBypass) {
+        if (isBypass) {
+            // Log that the attack was successful because security was OFF
+            logAttackToStorage(u, "ALLOWED (Vulnerable)", "0%");
+        }
         localStorage.setItem('adminSession', 'active');
         showDashboard();
     } else {
-        alert("❌ ACCESS DENIED");
+        alert("❌ ACCESS DENIED: Invalid Credentials");
     }
 }
+
+
 
 function adminLogout() {
     // Clear session
@@ -288,54 +319,3 @@ function addRealtimeLog(time, ip, type, query, confidence, status) {
 }
 // Global state
 // --- GLOBAL STATE ---
-let isProtectionActive = false; 
-
-// --- TOGGLE FUNCTION ---
-function toggleProtection() {
-    const checkbox = document.getElementById('protectionToggle');
-    const label = document.getElementById('protectionLabel');
-    
-    // This updates the 'Global' variable
-    isProtectionActive = checkbox.checked; 
-    
-    if (isProtectionActive) {
-        label.innerText = "SQL PROTECTION: ON";
-        label.style.color = "#2ea043"; // Green
-    } else {
-        label.innerText = "SQL PROTECTION: OFF";
-        label.style.color = "#f85149"; // Red
-    }
-}
-
-// --- LOGIN FUNCTION ---
-function adminLogin(e) {
-    e.preventDefault();
-    const u = document.getElementById('adminUser').value;
-    const p = document.getElementById('adminPass').value;
-
-    // ONLY check for attacks if the protection is ON
-    if (isProtectionActive) {
-        const analysis = detectSQLi(u + " " + p);
-        if (analysis.isMalicious) {
-            // Log it as BLOCKED
-            logAttackToStorage(u, "BLOCKED", analysis.confidence);
-            alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
-            return; // Stops the login
-        }
-    }
-
-    // IF PROTECTION IS OFF (OR QUERY IS SAFE):
-    // Check if it's the admin OR a demo bypass
-    const isBypass = u.includes("' OR 1=1");
-    
-    if ((u === 'admin' && p === 'admin123') || isBypass) {
-        if (isBypass) {
-            // Log that the attack was successful because security was OFF
-            logAttackToStorage(u, "ALLOWED (Vulnerable)", "0%");
-        }
-        localStorage.setItem('adminSession', 'active');
-        showDashboard();
-    } else {
-        alert("❌ ACCESS DENIED: Invalid Credentials");
-    }
-}
