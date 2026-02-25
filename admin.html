@@ -155,23 +155,28 @@
             if (localStorage.getItem('adminSession') === 'active') showDashboard();
         });
 
-        // 1. Protection Switch Logic
-        function toggleProtection() {
-            const checkbox = document.getElementById('protectionToggle');
-            isProtectionActive = checkbox.checked;
-            localStorage.setItem('sqlProtectionState', isProtectionActive);
-            updateToggleUI(isProtectionActive);
-        }
+    function loadUsers() {
+        const tbody = document.getElementById('userTableBody');
+        if (!tbody) return;
 
-        function updateToggleUI(isActive) {
-            const label = document.getElementById('protectionLabel');
-            const checkbox = document.getElementById('protectionToggle');
-            if (label) {
-                label.innerText = isActive ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
-                label.style.color = isActive ? "#2ea043" : "#f85149";
-            }
-            if (checkbox) checkbox.checked = isActive;
-        }
+        // Start with the primary Administrator account
+        let html = `<tr><td>#100</td><td><strong>admin</strong></td><td>$2b$12$K9R...</td><td>System Admin</td><td><em>Protected</em></td></tr>`;
+
+        // Dynamically add only users who registered through your site
+        const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+        registeredUsers.forEach((u, index) => {
+            html += `
+                <tr>
+                    <td>#${201 + index}</td>
+                    <td><strong>${u.username}</strong></td>
+                    <td><code>${u.password.substring(0,5)}***</code></td>
+                    <td>Registered User</td>
+                    <td><button class="outline" onclick="blockUser(this)">Block Access</button></td>
+                </tr>`;
+        });
+
+        tbody.innerHTML = html;
+    }
 
         // 2. Authentication Logic
         function adminLogin(e) {
