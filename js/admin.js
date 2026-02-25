@@ -1,171 +1,193 @@
+// js/admin.js
+
+// --- GLOBAL VARIABLES ---
 let totalRequests = 0;
 let blockedThreats = 0;
-let chart;
-let protectionEnabled = false;
+let trafficChart;
+let threatPieChart;
 
-document.addEventListener("DOMContentLoaded", () => {
-   const toggle = document.getElementById("protectionToggle");
-const label = document.getElementById("protectionLabel");
+const safeQueries = ["/shop?id=12", "/search?q=watch", "/login", "/home", "/cart"];
+const attackQueries = ["' OR 1=1 --", "UNION SELECT user, pass", "DROP TABLE users;", "admin' --"];
 
-toggle.checked = savedState;
-label.textContent = savedState
-    ? "SQL PROTECTION: ON"
-    : "SQL PROTECTION: OFF";
-
-protectionEnabled = savedState;
-
-    if (localStorage.getItem("adminSession") === "active") {
-        openDashboard();
+// --- 1. SESSION MANAGEMENT (THE FIX) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if admin is ALREADY logged in
+    const isAdmin = localStorage.getItem('adminSession');
+    
+    if (isAdmin === 'active') {
+        // Skip login screen
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'grid';
+        
+        // Start tools immediately
+        initLiveChart();
+        initThreatChart();
+        startSimulation();
     }
-
-    document.getElementById("loginForm")
-        .addEventListener("submit", login);
-
-    document.querySelectorAll(".sidebar nav a")
-        .forEach(link => link.addEventListener("click", switchTab));
-
-    document.getElementById("logoutBtn")
-        .addEventListener("click", logout);
-
-    document.getElementById("protectionToggle")
-        .addEventListener("change", toggleProtection);
-
-    document.getElementById("trainBtn")
-        .addEventListener("click", trainModel);
 });
 
-function login(e) {
-    e.preventDefault();
-    const u = adminUser.value;
-    const p = adminPass.value;
+function adminLogin(event) {
+    event.preventDefault();
+    const user = document.getElementById('adminUser').value;
+    const pass = document.getElementById('adminPass').value;
 
-    if (u === "admin" && p === "admin123") {
-        localStorage.setItem("adminSession", "active");
-        openDashboard();
+    // Hardcoded check
+    if (user === 'admin' && pass === 'admin123') {
+        // SAVE SESSION TO BROWSER
+        localStorage.setItem('adminSession', 'active');
+        
+        // Hide Login & Show Panel
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('adminPanel').style.display = 'grid';
+        
+        // Initialize Tools
+        initLiveChart();
+        initThreatChart();
+        startSimulation(); 
     } else {
-        alert("Invalid credentials");
+        alert("ACCESS DENIED");
     }
 }
 
-function openDashboard() {
-    login-overlay.style.display = "none";
-    adminPanel.classList.remove("hidden");
-    initChart();
-    startSimulation();
-    loadUsers();
+function adminLogout() {
+    // Clear session
+    localStorage.removeItem('adminSession');
+    window.location.href = 'index.html'; // Kick back to home
 }
 
-function logout() {
-    localStorage.removeItem("adminSession");
-    location.reload();
+// --- 2. TAB SWITCHING ---
+function switchTab(tabName) {
+    const contents = document.querySelectorAll('.tab-content');
+    contents.forEach(div => div.classList.remove('active'));
+    
+    const links = document.querySelectorAll('.sidebar a');
+    links.forEach(a => a.classList.remove('active'));
+
+    const tabElement = document.getElementById('tab-' + tabName);
+    const navElement = document.getElementById('nav-' + tabName);
+    
+    // Safety check in case elements don't exist
+    if(tabElement) tabElement.classList.add('active');
+    if(navElement) navElement.classList.add('active');
 }
 
-function switchTab(e) {
-    document.querySelectorAll(".sidebar nav a")
-        .forEach(a => a.classList.remove("active"));
-    e.target.classList.add("active");
+// --- 3. CHARTS & SIMULATION ---
 
-    document.querySelectorAll(".tab")
-        .forEach(tab => tab.classList.remove("active"));
-    document.getElementById(e.target.dataset.tab)
-        .classList.add("active");
-}
+function initLiveChart() {
+    const canvas = document.getElementById('trafficChart');
+    if(!canvas) return; // Stop if chart element is missing
 
-function toggleProtection(e) {
-    protectionEnabled = e.target.checked;
-
-    localStorage.setItem("sqlProtectionState", protectionEnabled);
-
-    protectionLabel.textContent =
-        protectionEnabled ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
-}
-
-function initChart() {
-    chart = new Chart(trafficChart, {
-        type: "line",
+    const ctx = canvas.getContext('2d');
+    trafficChart = new Chart(ctx, {
+        type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: "Traffic",
-                borderColor: "#2ea043",
-                data: []
+                label: 'Safe', borderColor: '#2ea043', data: [], tension: 0.4
+            }, {
+                label: 'Attack', borderColor: '#c62828', data: [], tension: 0.1
             }]
         },
-        options: { animation: false }
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: { x: { display: false }, y: { beginAtZero: true } },
+            animation: { duration: 0 }
+        }
     });
 }
+
+function initThreatChart() {
+    const canvas = document.getElementById('threatPieChart');
+    if(!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    threatPieChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['SQL Injection', 'XSS', 'Brute Force'],
+            datasets: [{
+                data: [65, 20, 15],
+                backgroundColor: ['#c62828', '#f1c40f', '#e67e22'],
+                borderWidth: 0
+            }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'right', labels: { color: 'white' } } } }
+    });
+}
+
 function startSimulation() {
-
     setInterval(() => {
-
-        let logs = JSON.parse(localStorage.getItem("simulatedAttacks")) || [];
-
-        if (logs.length > 0) {
-            const attack = logs.shift();
-
-            totalRequests++;
-            if (attack.status === "BLOCKED") blockedThreats++;
-
-            updateStats();
-
-            addRow("realtimeLog",
-                attack.time,
-                attack.ip,
-                attack.query,
-                attack.status === "BLOCKED"
-            );
-
-            addRow("logTable",
-                attack.time,
-                attack.ip,
-                attack.query,
-                attack.status === "BLOCKED"
-            );
-
-            localStorage.setItem("simulatedAttacks", JSON.stringify(logs));
-        }
-
-    }, 1000);
-}
-function addRow(tableId, time, ip, query, attack) {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-        <td>${time}</td>
-        <td>${ip}</td>
-        <td>${query}</td>
-        <td style="color:${attack ? "#f85149" : "#2ea043"}">
-            ${attack ? "BLOCKED" : "ALLOWED"}
-        </td>
-    `;
-    document.getElementById(tableId).prepend(row);
-}
-
-function loadUsers() {
-    const users = [
-        { id: 1, name: "admin", status: "Active" },
-        { id: 2, name: "demoUser", status: "Active" },
-        { id: 3, name: "unknown", status: "Suspicious" }
-    ];
-
-    users.forEach(u => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${u.id}</td>
-            <td>${u.name}</td>
-            <td>${u.status}</td>
-        `;
-        userTable.appendChild(row);
-    });
-}
-
-function trainModel() {
-    let width = 0;
-    const interval = setInterval(() => {
-        if (width >= 100) {
-            clearInterval(interval);
+        // 1. Check for real user attacks from Login Page
+        let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        
+        if (realAttacks.length > 0) {
+            const attack = realAttacks.shift(); 
+            addCustomRow(attack.time, attack.ip, attack.query, true);
+            localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
         } else {
-            width++;
-            progressBar.style.width = width + "%";
+            // 2. Random simulated traffic
+            const isAttack = Math.random() < 0.2; 
+            addLogRow(isAttack);
         }
-    }, 30);
+    }, 1500);
+}
+
+function generateRandomAttack() { addLogRow(true); }
+
+function addCustomRow(time, ip, query, isAttack) {
+    // Logic for real attacks (from login page)
+    totalRequests++;
+    if(isAttack) blockedThreats++;
+    updateStats();
+    updateLogTable(time, ip, query, "CRITICAL THREAT", "BLOCKED (Firewall)", "color:#ff7b72");
+    updateChart(time, isAttack);
+}
+
+function addLogRow(isAttack) {
+    // Logic for random simulated attacks
+    totalRequests++;
+    if (isAttack) blockedThreats++;
+
+    const queryList = isAttack ? attackQueries : safeQueries;
+    const query = queryList[Math.floor(Math.random() * queryList.length)];
+    const ip = "192.168.1." + Math.floor(Math.random() * 255);
+    const time = new Date().toLocaleTimeString();
+    
+    const prediction = isAttack ? "MALICIOUS" : "SAFE";
+    const cssClass = isAttack ? "color:#f85149; font-weight:bold" : "color:#2ea043";
+    
+    updateStats();
+    updateLogTable(time, ip, query, prediction, isAttack ? 'BLOCKED' : 'ALLOWED', cssClass);
+    updateChart(time, isAttack);
+}
+
+// Helpers
+function updateStats() {
+    if(document.getElementById('totalReq')) document.getElementById('totalReq').innerText = totalRequests;
+    if(document.getElementById('blockedReq')) document.getElementById('blockedReq').innerText = blockedThreats;
+}
+
+function updateLogTable(time, ip, query, pred, action, css) {
+    const tableBody = document.getElementById('logBody');
+    if(!tableBody) return;
+
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `<td>${time}</td><td>${ip}</td><td style="font-family:monospace">${query}</td><td style="${css}">${pred}</td><td>${action}</td>`;
+    tableBody.prepend(newRow);
+    if (tableBody.children.length > 8) tableBody.removeChild(tableBody.lastChild);
+}
+
+function updateChart(time, isAttack) {
+    if (trafficChart) {
+        trafficChart.data.labels.push(time);
+        trafficChart.data.datasets[0].data.push(isAttack ? 0 : 1);
+        trafficChart.data.datasets[1].data.push(isAttack ? 1 : 0);
+        
+        if (trafficChart.data.labels.length > 15) {
+            trafficChart.data.labels.shift();
+            trafficChart.data.datasets[0].data.shift();
+            trafficChart.data.datasets[1].data.shift();
+        }
+        trafficChart.update();
+    }
 }
