@@ -4,6 +4,11 @@ let chart;
 let protectionEnabled = false;
 
 document.addEventListener("DOMContentLoaded", () => {
+    const savedState = localStorage.getItem("sqlProtectionState") === "true";
+document.getElementById("protectionToggle").checked = savedState;
+protectionLabel.textContent =
+    savedState ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
+protectionEnabled = savedState;
 
     if (localStorage.getItem("adminSession") === "active") {
         openDashboard();
