@@ -106,24 +106,30 @@
                 <div class="stat-card"><div>Threats Blocked</div><div class="stat-number" id="blockedReq" style="color:#f85149">0</div></div>
                 <div class="stat-card"><div>AI Confidence</div><div class="stat-number" style="color:#2ea043">99.4%</div></div>
             </div>
-            <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
-                <header style="padding: 1rem; border-bottom: 1px solid #30363d;"><strong>Real-Time Activity</strong></header>
-                <table role="grid">
-                    <thead><tr><th>Time</th><th>Source</th><th>Event</th><th>Status</th></tr></thead>
-                    <tbody id="realtimeLogBody"></tbody>
-                </table>
-            </article>
+            <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
+    <header><strong>Add New Training Data</strong></header>
+    <div class="grid">
+        <div>
+            <label for="newQuery">Attack / Query Pattern</label>
+            <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
         </div>
+        <div>
+            <label for="newLabel">Classification</label>
+            <select id="newLabel">
+                <option value="1">Malicious (Attack)</option>
+                <option value="0">Safe (Normal)</option>
+            </select>
+        </div>
+    </div>
+    <button onclick="addNewData()" class="secondary outline" style="width: auto;">+ Add to Dataset</button>
+</article>
 
-        <div id="tab-users" class="tab-content">
-            <h2>User Database & Credentials</h2>
-            <table role="grid">
-                <thead><tr><th>ID</th><th>Username</th><th>Password (Hash)</th><th>Address</th><th>Action</th></tr></thead>
-                <tbody id="userTableBody">
-                    <tr><td>#100</td><td>admin</td><td>$2b$12$K9R...</td><td>System Admin</td><td><em>Protected</em></td></tr>
-                    <tr><td>#201</td><td>mounika</td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td><button class="outline" onclick="this.innerText='Blocked'">Block Access</button></td></tr>
-                </tbody>
-            </table>
+<h4 style="margin-top: 2rem;">Training Dataset (Preview)</h4>
+<table role="grid">
+    <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
+    <tbody id="mlTableBody">
+        </tbody>
+</table>
         </div>
 
         <div id="tab-logs" class="tab-content">
