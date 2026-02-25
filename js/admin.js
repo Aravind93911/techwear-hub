@@ -287,18 +287,16 @@ function addRealtimeLog(time, ip, type, query, confidence, status) {
     updateChart(time, status === "BLOCKED");
 }
 // Global state
-let isProtectionActive = false; // Global variable
+// --- GLOBAL STATE ---
+let isProtectionActive = false; 
 
+// --- TOGGLE FUNCTION ---
 function toggleProtection() {
     const checkbox = document.getElementById('protectionToggle');
     const label = document.getElementById('protectionLabel');
     
-    if (!checkbox || !label) {
-        console.error("Could not find the toggle elements! Check your IDs.");
-        return;
-    }
-
-    isProtectionActive = checkbox.checked;
+    // This updates the 'Global' variable
+    isProtectionActive = checkbox.checked; 
     
     if (isProtectionActive) {
         label.innerText = "SQL PROTECTION: ON";
@@ -307,51 +305,37 @@ function toggleProtection() {
         label.innerText = "SQL PROTECTION: OFF";
         label.style.color = "#f85149"; // Red
     }
-    
-    console.log("SQL Shield status:", isProtectionActive);
 }
+
+// --- LOGIN FUNCTION ---
 function adminLogin(e) {
     e.preventDefault();
     const u = document.getElementById('adminUser').value;
     const p = document.getElementById('adminPass').value;
 
-    // --- DETECTION LOGIC ---
+    // ONLY check for attacks if the protection is ON
     if (isProtectionActive) {
         const analysis = detectSQLi(u + " " + p);
         if (analysis.isMalicious) {
-            // Log the blocked attack
+            // Log it as BLOCKED
             logAttackToStorage(u, "BLOCKED", analysis.confidence);
-            alert("🚨 AI SHIELD: SQL Injection Detected and Blocked!");
-            return; // STOP the login
+            alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
+            return; // Stops the login
         }
     }
 
-    // --- BYPASS LOGIC (For Demo) ---
+    // IF PROTECTION IS OFF (OR QUERY IS SAFE):
+    // Check if it's the admin OR a demo bypass
     const isBypass = u.includes("' OR 1=1");
     
-    if (u === 'admin' && p === 'admin123' || isBypass) {
+    if ((u === 'admin' && p === 'admin123') || isBypass) {
         if (isBypass) {
-            // Log the successful attack (even if allowed)
+            // Log that the attack was successful because security was OFF
             logAttackToStorage(u, "ALLOWED (Vulnerable)", "0%");
         }
         localStorage.setItem('adminSession', 'active');
         showDashboard();
     } else {
-        alert("❌ ACCESS DENIED");
+        alert("❌ ACCESS DENIED: Invalid Credentials");
     }
-}
-
-// Helper to save attack to local storage for the logs tab
-function logAttackToStorage(query, status, confidence) {
-    const attackEvent = {
-        time: new Date().toLocaleTimeString(),
-        ip: "192.168.1.105",
-        query: query,
-        type: "SQL Injection",
-        confidence: confidence,
-        status: status
-    };
-    let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
-    logs.push(attackEvent);
-    localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
 }
