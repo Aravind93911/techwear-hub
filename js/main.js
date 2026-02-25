@@ -140,59 +140,71 @@ document.addEventListener('DOMContentLoaded', () => {
 // js/main.js - Update this function
 
 // js/main.js
+
 function userLogin(event) {
-    event.preventDefault();
+    event.preventDefault(); 
+    
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const userVal = usernameInput.value;
+    const passVal = passwordInput.value;
 
-    const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    console.log("Checking credentials for:", userVal); // Debugging line
 
-    const protectionEnabled =
-        localStorage.getItem("sqlProtectionState") === "true";
+    // --- 1. ROBUST SQL INJECTION DETECTION ---
+    // Convert inputs to UpperCase to ensure 'or' matches 'OR'
+    const cleanUser = userVal.toUpperCase();
+    const cleanPass = passVal.toUpperCase();
 
-    const upperUser = username.toUpperCase();
-    const upperPass = password.toUpperCase();
-
-    const patterns = [
-        "' OR 1=1",
-        "' OR '1'='1",
-        "UNION SELECT",
-        "DROP TABLE",
-        "--"
+    const sqlPatterns = [
+        "' OR '1'='1", 
+        "' OR 1=1", 
+        "OR 1=1", 
+        "UNION SELECT", 
+        "DROP TABLE", 
+        "--", 
+        "ADMIN' --"
     ];
-
-    const isAttack = patterns.some(p =>
-        upperUser.includes(p) || upperPass.includes(p)
+    
+    // Check if input contains any pattern
+    const isAttack = sqlPatterns.some(pattern => 
+        cleanUser.includes(pattern) || cleanPass.includes(pattern)
     );
 
     if (isAttack) {
-
-        // Save attack log
-        let logs = JSON.parse(localStorage.getItem("simulatedAttacks")) || [];
-
-        logs.push({
+        console.log("Attack Detected!"); // Debugging line
+        alert("⚠️ SECURITY ALERT: SQL Injection Attempt Detected!\nRequest has been blocked and logged.");
+        
+        // Save to Admin Log
+        let attackLogs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        attackLogs.push({
             time: new Date().toLocaleTimeString(),
-            ip: "192.168.1." + Math.floor(Math.random() * 255),
-            query: username,
-            status: protectionEnabled ? "BLOCKED" : "ALLOWED"
+            ip: "192.168.1.105 (User IP)",
+            query: userVal, // Save the exact text typed
+            type: "SQL Injection"
         });
-
-        localStorage.setItem("simulatedAttacks", JSON.stringify(logs));
-
-        if (protectionEnabled) {
-            alert("🚨 SQL Injection Detected! Request Blocked.");
-            return;
-        } else {
-            alert("⚠️ SQL Injection Allowed (Protection OFF - Vulnerable Mode)");
-        }
+        localStorage.setItem('simulatedAttacks', JSON.stringify(attackLogs));
+        
+        return; // STOP HERE. Do not log them in.
     }
 
-    // Normal login
-    if (username) {
-        localStorage.setItem("currentUser", username);
-        window.location.href = "profile.html";
+    // --- 2. NORMAL LOGIN ---
+    if (userVal) {
+        localStorage.setItem('currentUser', userVal);
+        window.location.href = 'profile.html'; 
+    } else {
+        alert("Please enter a username");
     }
 }
-   
+
+    // --- 2. NORMAL LOGIN LOGIC ---
+    if (userVal) {
+        localStorage.setItem('currentUser', userVal);
+        window.location.href = 'profile.html'; 
+    } else {
+        alert("Please enter a username");
+    }
+}
 // Add/Check this at the bottom of js/main.js
 
 document.addEventListener('DOMContentLoaded', () => {
