@@ -120,21 +120,32 @@ function startSimulation() {
 }
 
 function addLogToUI(a) {
-    const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
-    const row = `
-        <tr>
-            <td>${a.time}</td>
-            <td>${a.ip}</td>
-            <td><code>${a.query}</code></td>
-            <td style="color:${statusColor}; font-weight:bold">${a.status}</td>
-        </tr>`;
-
-    // Insert into BOTH the Dashboard Stream and the Attack Logs Tab
+    // 1. Target the specific <tbody> tags by their IDs
     const realtimeBody = document.getElementById('realtimeLogBody');
     const logsTabBody = document.getElementById('logBody');
 
-    if (realtimeBody) realtimeBody.insertAdjacentHTML('afterbegin', row);
-    if (logsTabBody) logsTabBody.insertAdjacentHTML('afterbegin', row);
+    // 2. Define the color based on whether it was blocked or allowed
+    const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
+
+    // 3. Create the row HTML
+    const row = `
+        <tr>
+            <td>${a.time}</td>
+            <td><code>${a.ip}</code></td>
+            <td style="font-family:monospace">${a.query}</td>
+            <td style="color:${statusColor}; font-weight:bold">${a.status}</td>
+        </tr>`;
+
+    // 4. Insert the row at the TOP of the tables
+    if (realtimeBody) {
+        realtimeBody.insertAdjacentHTML('afterbegin', row);
+        // Keep the dashboard clean by removing rows after 10 entries
+        if (realtimeBody.children.length > 10) realtimeBody.removeChild(realtimeBody.lastChild);
+    }
+
+    if (logsTabBody) {
+        logsTabBody.insertAdjacentHTML('afterbegin', row);
+    }
 }
 
 function addLogEntry(time, ip, query, status) {
