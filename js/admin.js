@@ -64,9 +64,11 @@ function switchTab(e) {
 
 function toggleProtection(e) {
     protectionEnabled = e.target.checked;
-    protectionLabel.textContent = protectionEnabled ?
-        "SQL PROTECTION: ON" :
-        "SQL PROTECTION: OFF";
+
+    localStorage.setItem("sqlProtectionState", protectionEnabled);
+
+    protectionLabel.textContent =
+        protectionEnabled ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
 }
 
 function initChart() {
