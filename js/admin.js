@@ -287,24 +287,28 @@ function addRealtimeLog(time, ip, type, query, confidence, status) {
     updateChart(time, status === "BLOCKED");
 }
 // Global state
-let isProtectionActive = false;
+let isProtectionActive = false; // Global variable
 
 function toggleProtection() {
     const checkbox = document.getElementById('protectionToggle');
     const label = document.getElementById('protectionLabel');
     
-    // Update the global state based on the checkbox
+    if (!checkbox || !label) {
+        console.error("Could not find the toggle elements! Check your IDs.");
+        return;
+    }
+
     isProtectionActive = checkbox.checked;
     
     if (isProtectionActive) {
-        label.innerText = "AI PROTECTION: ON";
-        label.style.color = "#2ea043"; // Green for ON
+        label.innerText = "SQL PROTECTION: ON";
+        label.style.color = "#2ea043"; // Green
     } else {
-        label.innerText = "AI PROTECTION: OFF";
-        label.style.color = "#f85149"; // Red for OFF
+        label.innerText = "SQL PROTECTION: OFF";
+        label.style.color = "#f85149"; // Red
     }
     
-    console.log("System Security Level Changed. AI Shield active: " + isProtectionActive);
+    console.log("SQL Shield status:", isProtectionActive);
 }
 function adminLogin(e) {
     e.preventDefault();
