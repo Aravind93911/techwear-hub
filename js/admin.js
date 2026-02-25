@@ -83,34 +83,39 @@ function initChart() {
         options: { animation: false }
     });
 }
-
 function startSimulation() {
+
     setInterval(() => {
-        const isAttack = Math.random() > 0.7;
-        const time = new Date().toLocaleTimeString();
-        const ip = "192.168.1." + Math.floor(Math.random() * 255);
-        const query = isAttack ? "' OR 1=1 --" : "/home";
 
-        totalRequests++;
-        if (isAttack) blockedThreats++;
+        let logs = JSON.parse(localStorage.getItem("simulatedAttacks")) || [];
 
-        totalReq.textContent = totalRequests;
-        blockedReq.textContent = blockedThreats;
+        if (logs.length > 0) {
+            const attack = logs.shift();
 
-        addRow("realtimeLog", time, ip, query, isAttack);
-        addRow("logTable", time, ip, query, isAttack);
+            totalRequests++;
+            if (attack.status === "BLOCKED") blockedThreats++;
 
-        chart.data.labels.push(time);
-        chart.data.datasets[0].data.push(totalRequests);
-        if (chart.data.labels.length > 15) {
-            chart.data.labels.shift();
-            chart.data.datasets[0].data.shift();
+            updateStats();
+
+            addRow("realtimeLog",
+                attack.time,
+                attack.ip,
+                attack.query,
+                attack.status === "BLOCKED"
+            );
+
+            addRow("logTable",
+                attack.time,
+                attack.ip,
+                attack.query,
+                attack.status === "BLOCKED"
+            );
+
+            localStorage.setItem("simulatedAttacks", JSON.stringify(logs));
         }
-        chart.update();
 
-    }, 1500);
+    }, 1000);
 }
-
 function addRow(tableId, time, ip, query, attack) {
     const row = document.createElement("tr");
     row.innerHTML = `
