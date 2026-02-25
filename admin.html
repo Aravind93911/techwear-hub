@@ -35,12 +35,15 @@
         /* 2. UI Components */
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
         .tab-content { display: none; }
-        .tab-content.active { display: block !important; }
+        .tab-content.active { display: block !important; animation: fadeIn 0.3s; }
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
         .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; }
+        
+        /* ML Elements */
         .progress-container { width: 100%; background: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
-        .progress-bar { width: 0%; height: 20px; background: #2ea043; border-radius: 10px; transition: 0.3s; }
+        .progress-bar { width: 0%; height: 20px; background: #2ea043; border-radius: 10px; transition: width 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -63,14 +66,16 @@
                 <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
                 <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
                 <a onclick="switchTab('logs')" id="nav-logs">📜 Attack Logs</a>
-                <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Training</a>
+                <a onclick="switchTab('ml')" id="nav-ml" style="color: #a371f7;">🤖 AI Model Training</a>
             </nav>
+
             <div style="padding: 1rem; border-top: 1px solid #30363d; margin-top: 1rem;">
                 <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
                     <input type="checkbox" id="protectionToggle" role="switch" onchange="toggleProtection()">
-                    <span id="protectionLabel" style="color: #f85149; font-weight: bold; font-size: 0.8rem;">SQL PROTECTION: OFF</span>
+                    <span id="protectionLabel" style="font-weight: bold; font-size: 0.8rem;">SQL PROTECTION: OFF</span>
                 </label>
             </div>
+
             <div style="margin-top: auto;">
                 <a href="index.html" style="color: #8b949e;">🏠 Back to Home</a>
                 <a onclick="adminLogout()" style="color: #f85149; cursor:pointer">🚪 Logout</a>
@@ -81,12 +86,12 @@
             <div id="tab-dashboard" class="tab-content active">
                 <h2>Live Threat Monitoring</h2>
                 <div class="stats-grid">
-                    <div class="stat-card"><div>Requests</div><div class="stat-number" id="totalReq">0</div></div>
-                    <div class="stat-card"><div>Blocked</div><div class="stat-number" id="blockedReq" style="color:#f85149">0</div></div>
-                    <div class="stat-card"><div>Confidence</div><div class="stat-number" style="color:#2ea043">99.4%</div></div>
+                    <div class="stat-card"><div>Total Requests</div><div class="stat-number" id="totalReq">0</div></div>
+                    <div class="stat-card"><div>Threats Blocked</div><div class="stat-number" id="blockedReq" style="color:#f85149">0</div></div>
+                    <div class="stat-card"><div>AI Confidence</div><div class="stat-number" style="color:#2ea043">99.4%</div></div>
                 </div>
                 <article style="background: #161b22; padding: 0;">
-                    <header style="padding: 1rem;"><strong>Activity Stream</strong></header>
+                    <header style="padding: 1rem;"><strong>Real-Time Activity Stream</strong></header>
                     <table role="grid"><tbody id="realtimeLogBody"></tbody></table>
                 </article>
             </div>
@@ -97,7 +102,7 @@
                     <thead><tr><th>ID</th><th>User</th><th>Password (Hash)</th><th>Location</th><th>Action</th></tr></thead>
                     <tbody id="userTableBody">
                         <tr><td>#100</td><td>admin</td><td>$2b$12$K9R...</td><td>System Admin</td><td><em>Protected</em></td></tr>
-                        <tr><td>#201</td><td>mounika</td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td><button class="outline" onclick="this.innerText='Blocked'">Block</button></td></tr>
+                        <tr><td>#201</td><td>mounika</td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td><button class="outline" onclick="this.innerText='Blocked'">Block Access</button></td></tr>
                     </tbody>
                 </table>
             </div>
@@ -105,7 +110,7 @@
             <div id="tab-logs" class="tab-content">
                 <h2>Security Incident Logs</h2>
                 <table role="grid">
-                    <thead><tr><th>Time</th><th>IP</th><th>Payload</th><th>Status</th></tr></thead>
+                    <thead><tr><th>Time</th><th>IP Address</th><th>Query / Payload</th><th>Status</th></tr></thead>
                     <tbody id="logBody"></tbody>
                 </table>
             </div>
@@ -113,21 +118,30 @@
             <div id="tab-ml" class="tab-content">
                 <h2>SQL Injection Detection Model (v2.1)</h2>
                 <div class="stats-grid">
-                    <div class="stat-card"><div>Samples</div><div class="stat-number" id="sampleCount">15,402</div></div>
+                    <div class="stat-card"><div>Training Samples</div><div class="stat-number" id="sampleCount">15,402</div></div>
                     <div class="stat-card"><div>Precision</div><div class="stat-number">98.2%</div></div>
                 </div>
-                <article>
-                    <header><strong>Add Training Data</strong></header>
+                <article style="background: #161b22; border: 1px solid #30363d;">
+                    <header><strong>Add New Training Data</strong></header>
                     <div class="grid">
                         <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
-                        <select id="newLabel"><option value="1">Malicious</option><option value="0">Safe</option></select>
+                        <select id="newLabel"><option value="1">Malicious (Attack)</option><option value="0">Safe (Normal)</option></select>
                     </div>
-                    <button onclick="addNewData()" class="secondary outline">+ Add</button>
+                    <button onclick="addNewData()" class="secondary outline">+ Add to Dataset</button>
                 </article>
-                <h4 style="margin-top: 1rem;">Dataset Preview</h4>
-                <table role="grid"><tbody id="mlTableBody"></tbody></table>
-                <button onclick="trainModel()" class="contrast" id="trainBtn">Retrain Model</button>
-                <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+                <h4 style="margin-top: 1rem;">Training Dataset (Preview)</h4>
+                <table role="grid">
+                    <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
+                    <tbody id="mlTableBody">
+                        <tr><td>Normal</td><td>SELECT * FROM users WHERE id = 5</td><td style="color:#2ea043">Safe (0)</td></tr>
+                        <tr><td>Attack</td><td>' OR 1=1 --</td><td style="color:#f85149">Malicious (1)</td></tr>
+                    </tbody>
+                </table>
+                <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                    <small id="progressText" style="display:block; text-align:center; color:#2ea043">Initializing...</small>
+                </div>
             </div>
         </main>
     </div>
@@ -141,8 +155,10 @@
             if (localStorage.getItem('adminSession') === 'active') showDashboard();
         });
 
+        // 1. Protection Switch Logic
         function toggleProtection() {
-            isProtectionActive = document.getElementById('protectionToggle').checked;
+            const checkbox = document.getElementById('protectionToggle');
+            isProtectionActive = checkbox.checked;
             localStorage.setItem('sqlProtectionState', isProtectionActive);
             updateToggleUI(isProtectionActive);
         }
@@ -157,14 +173,19 @@
             if (checkbox) checkbox.checked = isActive;
         }
 
+        // 2. Authentication Logic
         function adminLogin(e) {
             e.preventDefault();
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
+
+            // Attack Detection when Protection is ON
             if (isProtectionActive && (u.includes("'") || u.includes("--"))) {
                 logAttack(u, "BLOCKED");
-                return alert("🚨 SQL PROTECTION ACTIVE!");
+                return alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
             }
+
+            // Normal login or Vulnerable Bypass
             if ((u === 'admin' && p === 'admin123') || u.includes("' OR 1=1")) {
                 if (u.includes("' OR 1=1")) logAttack(u, "ALLOWED (Vulnerable)");
                 localStorage.setItem('adminSession', 'active');
@@ -172,6 +193,7 @@
             } else { alert("ACCESS DENIED"); }
         }
 
+        // 3. Simulation & Logging
         function logAttack(query, status) {
             const a = { time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query, status };
             let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
@@ -201,9 +223,40 @@
         }
 
         function addLogToUI(a) {
-            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td><code>${a.query}</code></td><td style="color:${a.status==='BLOCKED'?'#f85149':'#2ea043'}">${a.status}</td></tr>`;
+            const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
+            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td><code>${a.query}</code></td><td style="color:${statusColor}">${a.status}</td></tr>`;
             document.getElementById('realtimeLogBody').insertAdjacentHTML('afterbegin', row);
             document.getElementById('logBody').insertAdjacentHTML('afterbegin', row);
+        }
+
+        // 4. ML Functions
+        function addNewData() {
+            const q = document.getElementById('newQuery').value;
+            const l = document.getElementById('newLabel').value;
+            if(!q) return alert("Enter pattern");
+            const row = `<tr><td>${l==1?'Attack':'Normal'}</td><td><code>${q}</code></td><td style="color:${l==1?'#f85149':'#2ea043'}">${l==1?'Malicious':'Safe'}</td></tr>`;
+            document.getElementById('mlTableBody').insertAdjacentHTML('afterbegin', row);
+            document.getElementById('newQuery').value = "";
+            let cnt = document.getElementById('sampleCount');
+            cnt.innerText = (parseInt(cnt.innerText.replace(',','')) + 1).toLocaleString();
+        }
+
+        function trainModel() {
+            const btn = document.getElementById('trainBtn');
+            const bar = document.getElementById('progressBar');
+            const container = document.getElementById('progressContainer');
+            const text = document.getElementById('progressText');
+            btn.disabled = true; container.style.display = 'block';
+            let w = 0;
+            const i = setInterval(() => {
+                if (w >= 100) {
+                    clearInterval(i); alert("Model Retrained!"); 
+                    container.style.display = 'none'; btn.disabled = false;
+                } else { 
+                    w += 5; bar.style.width = w + '%'; 
+                    text.innerText = w < 50 ? "Processing Dataset..." : "Optimizing Weights...";
+                }
+            }, 100);
         }
 
         function switchTab(t) {
@@ -211,24 +264,6 @@
             document.getElementById('tab-' + t).classList.add('active');
             document.querySelectorAll('.sidebar a').forEach(el => el.classList.remove('active'));
             document.getElementById('nav-' + t).classList.add('active');
-        }
-
-        function addNewData() {
-            const q = document.getElementById('newQuery').value;
-            if(!q) return;
-            const row = `<tr><td>New</td><td><code>${q}</code></td><td>Manual</td></tr>`;
-            document.getElementById('mlTableBody').insertAdjacentHTML('afterbegin', row);
-            document.getElementById('newQuery').value = "";
-            alert("Added!");
-        }
-
-        function trainModel() {
-            document.getElementById('progressContainer').style.display = 'block';
-            let w = 0;
-            const i = setInterval(() => {
-                if (w >= 100) { clearInterval(i); alert("Model Retrained!"); document.getElementById('progressContainer').style.display='none'; }
-                else { w += 10; document.getElementById('progressBar').style.width = w + '%'; }
-            }, 100);
         }
 
         function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
