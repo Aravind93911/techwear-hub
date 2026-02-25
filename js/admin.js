@@ -349,3 +349,23 @@ function logAttackToStorage(query, status, confidence) {
     logs.push(attackEvent);
     localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
 }
+// Add this at the top of your js/admin.js file
+let isProtectionActive = false;
+
+function toggleProtection() {
+    const checkbox = document.getElementById('protectionToggle');
+    const label = document.getElementById('protectionLabel');
+    
+    // Update the global state based on the checkbox
+    isProtectionActive = checkbox.checked;
+    
+    if (isProtectionActive) {
+        label.innerText = "AI PROTECTION: ON";
+        label.style.color = "#2ea043"; // Green for ON
+    } else {
+        label.innerText = "AI PROTECTION: OFF";
+        label.style.color = "#f85149"; // Red for OFF
+    }
+    
+    console.log("System Security Level Changed. AI Shield active: " + isProtectionActive);
+}
