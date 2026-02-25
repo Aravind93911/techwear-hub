@@ -146,39 +146,46 @@
         </main>
     </div>
 
-    <script>
+  <script>
         let totalRequests = 0, blockedThreats = 0;
+        // 1. Initial State Sync
         let isProtectionActive = localStorage.getItem('sqlProtectionState') === 'true';
 
         document.addEventListener('DOMContentLoaded', () => {
+            updateToggleUI(isProtectionActive); // Sync UI
+            if (localStorage.getItem('adminSession') === 'active') {
+                showDashboard();
+            }
+        });
+
+        // --- NEW: TOGGLE LOGIC ---
+        function toggleProtection() {
+            const checkbox = document.getElementById('protectionToggle');
+            isProtectionActive = checkbox.checked;
+            localStorage.setItem('sqlProtectionState', isProtectionActive);
             updateToggleUI(isProtectionActive);
-            if (localStorage.getItem('adminSession') === 'active') showDashboard();
-        });
+        }
 
-    function loadUsers() {
-        const tbody = document.getElementById('userTableBody');
-        if (!tbody) return;
+        function updateToggleUI(isActive) {
+            const label = document.getElementById('protectionLabel');
+            const checkbox = document.getElementById('protectionToggle');
+            if (label) {
+                label.innerText = isActive ? "SQL PROTECTION: ON" : "SQL PROTECTION: OFF";
+                label.style.color = isActive ? "#2ea043" : "#f85149";
+            }
+            if (checkbox) checkbox.checked = isActive;
+        }
 
-        // Start with the primary Administrator account
-        let html = `<tr><td>#100</td><td><strong>admin</strong></td><td>$2b$12$K9R...</td><td>System Admin</td><td><em>Protected</em></td></tr>`;
+        // --- NEW: BLOCK USER LOGIC ---
+        function blockUser(btn) {
+            if(confirm("Are you sure you want to blacklist this user?")) {
+                const row = btn.closest('tr');
+                row.cells[4].innerHTML = '<span style="color:#f85149; font-weight:bold;">BANNED</span>';
+                alert("User Access Revoked.");
+            }
+        }
 
-        // Dynamically add only users who registered through your site
-        const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
-        registeredUsers.forEach((u, index) => {
-            html += `
-                <tr>
-                    <td>#${201 + index}</td>
-                    <td><strong>${u.username}</strong></td>
-                    <td><code>${u.password.substring(0,5)}***</code></td>
-                    <td>Registered User</td>
-                    <td><button class="outline" onclick="blockUser(this)">Block Access</button></td>
-                </tr>`;
-        });
-
-        tbody.innerHTML = html;
-    }
-
-        // 2. Authentication Logic
+        // --- AUTHENTICATION & LOGIN ---
         function adminLogin(e) {
             e.preventDefault();
             const u = document.getElementById('adminUser').value;
@@ -198,18 +205,38 @@
             } else { alert("ACCESS DENIED"); }
         }
 
-        // 3. Simulation & Logging
+        function showDashboard() {
+            document.getElementById('login-overlay').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'grid';
+            loadUsers(); // Ensure users are loaded
+            startSimulation();
+        }
+
+        function loadUsers() {
+            const tbody = document.getElementById('userTableBody');
+            if (!tbody) return;
+
+            let html = `<tr><td>#100</td><td><strong>admin</strong></td><td>$2b$12$K9R...</td><td>System Admin</td><td><em>Protected</em></td></tr>`;
+
+            const registeredUsers = JSON.parse(localStorage.getItem('techWearUsers')) || [];
+            registeredUsers.forEach((u, index) => {
+                html += `
+                    <tr>
+                        <td>#${201 + index}</td>
+                        <td><strong>${u.username}</strong></td>
+                        <td><code>${u.password.substring(0,5)}***</code></td>
+                        <td>Registered User</td>
+                        <td><button class="outline" onclick="blockUser(this)">Block Access</button></td>
+                    </tr>`;
+            });
+            tbody.innerHTML = html;
+        }
+
         function logAttack(query, status) {
             const a = { time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query, status };
             let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
             logs.push(a);
             localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
-        }
-
-        function showDashboard() {
-            document.getElementById('login-overlay').style.display = 'none';
-            document.getElementById('adminPanel').style.display = 'grid';
-            startSimulation();
         }
 
         function startSimulation() {
@@ -234,7 +261,6 @@
             document.getElementById('logBody').insertAdjacentHTML('afterbegin', row);
         }
 
-        // 4. ML Functions
         function addNewData() {
             const q = document.getElementById('newQuery').value;
             const l = document.getElementById('newLabel').value;
@@ -271,7 +297,8 @@
             document.getElementById('nav-' + t).classList.add('active');
         }
 
-        function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
+        function adminLogout() { 
+            localStorage.removeItem('adminSession'); 
+            window.location.reload(); 
+        }
     </script>
-</body>
-</html>
