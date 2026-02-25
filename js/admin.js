@@ -26,26 +26,40 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function adminLogin(event) {
-    event.preventDefault();
-    const user = document.getElementById('adminUser').value;
-    const pass = document.getElementById('adminPass').value;
+function adminLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('adminUser').value;
+    const p = document.getElementById('adminPass').value;
 
-    // Hardcoded check
-    if (user === 'admin' && pass === 'admin123') {
-        // SAVE SESSION TO BROWSER
+    // 1. Check for SQL Injection first
+    const analysis = detectSQLi(u + " " + p); 
+
+    if (analysis.isMalicious) {
+        // 2. Create an attack record
+        const attackEvent = {
+            time: new Date().toLocaleTimeString(),
+            ip: "Your Local IP", // In a real app, this would be the user's IP
+            query: u,
+            type: "SQL Injection Attempt",
+            target: "/admin-login",
+            confidence: analysis.confidence + "%"
+        };
+
+        // 3. Save to localStorage so the Dashboard can see it
+        let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        logs.push(attackEvent);
+        localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
+
+        alert("🚨 SECURITY ALERT: Malicious activity detected and logged.");
+        return; // Stop the login process
+    }
+
+    // 4. Normal login check
+    if (u === 'admin' && p === 'admin123') {
         localStorage.setItem('adminSession', 'active');
-        
-        // Hide Login & Show Panel
-        document.getElementById('login-overlay').style.display = 'none';
-        document.getElementById('adminPanel').style.display = 'grid';
-        
-        // Initialize Tools
-        initLiveChart();
-        initThreatChart();
-        startSimulation(); 
+        showDashboard();
     } else {
-        alert("ACCESS DENIED");
+        alert("❌ ACCESS DENIED");
     }
 }
 
@@ -117,19 +131,41 @@ function initThreatChart() {
 
 function startSimulation() {
     setInterval(() => {
-        // 1. Check for real user attacks from Login Page
+        // Check if there are any new attacks saved in localStorage from the login page
         let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
         
         if (realAttacks.length > 0) {
-            const attack = realAttacks.shift(); 
-            addCustomRow(attack.time, attack.ip, attack.query, true);
+            const attack = realAttacks.shift(); // Get the oldest attack
+            
+            // Add it to the UI
+            addRealtimeLog(
+                attack.time, 
+                attack.ip, 
+                attack.type, 
+                attack.query, 
+                attack.confidence, 
+                "BLOCKED"
+            );
+
+            // Update stats
+            blockedThreats++;
+            totalRequests++;
+            updateStats();
+
+            // Save the remaining attacks back to storage
             localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
         } else {
-            // 2. Random simulated traffic
-            const isAttack = Math.random() < 0.2; 
-            addLogRow(isAttack);
+            // ... (Your existing random simulation code) ...
+            totalRequests += Math.floor(Math.random() * 2);
+            updateStats();
         }
     }, 1500);
+}
+
+// Helper to update the numbers on the screen
+function updateStats() {
+    document.getElementById('totalReq').innerText = totalRequests;
+    document.getElementById('blockedReq').innerText = blockedThreats;
 }
 
 function generateRandomAttack() { addLogRow(true); }
