@@ -227,3 +227,68 @@ function updateChart(time, isAttack) {
         trafficChart.update();
     }
 }
+// --- 4. THE ML BRAIN (SQLi Detection) ---
+function detectSQLi(query) {
+    let score = 0;
+    const q = query.toLowerCase();
+
+    // Pattern matching for common SQLi keywords
+    const patterns = [
+        /\bunion\b.*\bselect\b/i, 
+        /\bdrop\b.*\btable\b/i,
+        /--/, 
+        /1\s*=\s*1/,
+        /admin'\s*--/
+    ];
+
+    patterns.forEach(p => { if (p.test(q)) score += 0.6; });
+
+    // Detection of special character density (e.g., lots of quotes)
+    const specialChars = (query.match(/['";\(\)\/\*]/g) || []).length;
+    if (specialChars > 2) score += 0.3;
+
+    return {
+        isMalicious: score >= 0.5,
+        confidence: Math.min(score * 100, 99.8).toFixed(1)
+    };
+}
+
+// --- 5. LOGGING ENGINE (Populates both tables) ---
+function addRealtimeLog(time, ip, type, query, confidence, status) {
+    const liveBody = document.getElementById('realtimeLogBody'); // Dashboard Table
+    const logTabBody = document.getElementById('logBody');        // Security Logs Tab Table
+    
+    const statusColor = status === "BLOCKED" ? "#f85149" : "#2ea043";
+
+    // 1. Update the Dashboard Table (Real-time Stream)
+    if (liveBody) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${time}</td>
+            <td><code>${ip}</code></td>
+            <td>${type}</td>
+            <td><code>${query}</code></td>
+            <td>${confidence}</td>
+            <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
+        `;
+        liveBody.prepend(row);
+        if (liveBody.children.length > 10) liveBody.removeChild(liveBody.lastChild);
+    }
+
+    // 2. Update the dedicated "Security Logs" Tab Table
+    if (logTabBody) {
+        const logRow = document.createElement('tr');
+        logRow.innerHTML = `
+            <td>${time}</td>
+            <td>${ip}</td>
+            <td style="font-family:monospace">${query}</td>
+            <td style="color:${statusColor}">${status === "BLOCKED" ? "CRITICAL" : "LOW"}</td>
+            <td>${status}</td>
+        `;
+        logTabBody.prepend(logRow);
+        if (logTabBody.children.length > 20) logTabBody.removeChild(logTabBody.lastChild);
+    }
+
+    // 3. Update the Line Chart
+    updateChart(time, status === "BLOCKED");
+}
