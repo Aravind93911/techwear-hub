@@ -132,33 +132,48 @@ function loadUsers() {
         <tr><td>#201</td><td><strong>mounika</strong></td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td><button class="outline" onclick="this.innerText='Blocked'">Block Access</button></td></tr>
     `;
 }
+
 function addNewData() {
+    // 1. Get elements
     const queryInput = document.getElementById('newQuery');
     const labelSelect = document.getElementById('newLabel');
     const table = document.getElementById('mlTableBody');
     const countDisplay = document.getElementById('sampleCount');
 
-    if(queryInput.value === "") {
+    // 2. Validation
+    if(!queryInput || queryInput.value.trim() === "") {
         alert("Please enter a query pattern.");
         return;
     }
 
+    console.log("Adding new data point to ML model...");
+
+    // 3. Determine Style based on classification
     const isAttack = labelSelect.value === "1";
+    const typeText = isAttack ? "Attack" : "Normal";
+    const labelText = isAttack ? "Malicious (1)" : "Safe (0)";
+    const labelColor = isAttack ? "#f85149" : "#2ea043";
+
+    // 4. Create and add the new row to the table
     const row = document.createElement('tr');
     row.innerHTML = `
-        <td>${isAttack ? "Attack" : "Normal"}</td>
+        <td>${typeText}</td>
         <td style="font-family:monospace">${queryInput.value}</td>
-        <td style="color:${isAttack ? "#f85149" : "#2ea043"}">${isAttack ? "Malicious (1)" : "Safe (0)"}</td>
+        <td style="color:${labelColor}">${labelText}</td>
     `;
     
-    // Add to the top of the dataset table
-    table.prepend(row);
+    // Prepend puts the new data at the top of the list
+    if(table) {
+        table.prepend(row);
+    }
 
-    // Update the counter
-    let currentCount = parseInt(countDisplay.innerText.replace(/,/g, ''));
-    countDisplay.innerText = (currentCount + 1).toLocaleString();
+    // 5. Update the Training Sample Counter
+    if(countDisplay) {
+        let currentCount = parseInt(countDisplay.innerText.replace(/,/g, ''));
+        countDisplay.innerText = (currentCount + 1).toLocaleString();
+    }
 
+    // 6. Reset the input field
     queryInput.value = "";
-    alert("✅ Data added. Re-run training to update the ML brain.");
+    alert("✅ Data added to training set. Retrain the model to apply changes.");
 }
-// ... Keep your initLiveChart and initThreatChart functions as they are ...
