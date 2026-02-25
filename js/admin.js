@@ -131,13 +131,14 @@ function initThreatChart() {
 
 function startSimulation() {
     setInterval(() => {
-        // Check if there are any new attacks saved in localStorage from the login page
+        // 1. Pull any attacks saved by the login page
         let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
         
         if (realAttacks.length > 0) {
-            const attack = realAttacks.shift(); // Get the oldest attack
+            // Take the first attack in the queue
+            const attack = realAttacks.shift(); 
             
-            // Add it to the UI
+            // Log it to BOTH tables using the function below
             addRealtimeLog(
                 attack.time, 
                 attack.ip, 
@@ -147,19 +148,19 @@ function startSimulation() {
                 "BLOCKED"
             );
 
-            // Update stats
+            // Update global stats
             blockedThreats++;
             totalRequests++;
             updateStats();
 
-            // Save the remaining attacks back to storage
+            // Clear the queue so it doesn't log the same attack twice
             localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
         } else {
-            // ... (Your existing random simulation code) ...
+            // 2. Otherwise, continue with random background traffic
             totalRequests += Math.floor(Math.random() * 2);
             updateStats();
         }
-    }, 1500);
+    }, 1000); // Check every second
 }
 
 // Helper to update the numbers on the screen
@@ -255,39 +256,32 @@ function detectSQLi(query) {
 
 // --- 5. LOGGING ENGINE (Populates both tables) ---
 function addRealtimeLog(time, ip, type, query, confidence, status) {
-    const liveBody = document.getElementById('realtimeLogBody'); // Dashboard Table
-    const logTabBody = document.getElementById('logBody');        // Security Logs Tab Table
+    // These IDs MUST match your HTML <tbody> tags exactly
+    const liveBody = document.getElementById('realtimeLogBody'); 
+    const logTabBody = document.getElementById('logBody');        
     
     const statusColor = status === "BLOCKED" ? "#f85149" : "#2ea043";
 
-    // 1. Update the Dashboard Table (Real-time Stream)
+    const rowHTML = `
+        <td>${time}</td>
+        <td>${ip}</td>
+        <td style="font-family:monospace">${query}</td>
+        <td style="color:${statusColor}">${status === "BLOCKED" ? "CRITICAL" : "LOW"}</td>
+        <td>${status}</td>
+    `;
+
     if (liveBody) {
         const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${time}</td>
-            <td><code>${ip}</code></td>
-            <td>${type}</td>
-            <td><code>${query}</code></td>
-            <td>${confidence}</td>
-            <td style="color: ${statusColor}; font-weight: bold;">${status}</td>
-        `;
+        row.innerHTML = rowHTML;
         liveBody.prepend(row);
-        if (liveBody.children.length > 10) liveBody.removeChild(liveBody.lastChild);
     }
 
-    // 2. Update the dedicated "Security Logs" Tab Table
     if (logTabBody) {
-        const logRow = document.createElement('tr');
-        logRow.innerHTML = `
-            <td>${time}</td>
-            <td>${ip}</td>
-            <td style="font-family:monospace">${query}</td>
-            <td style="color:${statusColor}">${status === "BLOCKED" ? "CRITICAL" : "LOW"}</td>
-            <td>${status}</td>
-        `;
-        logTabBody.prepend(logRow);
-        if (logTabBody.children.length > 20) logTabBody.removeChild(logTabBody.lastChild);
+        const row = document.createElement('tr');
+        row.innerHTML = rowHTML;
+        logTabBody.prepend(row);
     }
+}
 
     // 3. Update the Line Chart
     updateChart(time, status === "BLOCKED");
