@@ -4,10 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Admin - Security Operations Center</title>
-    
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
     <style>
         body { min-height: 100vh; display: flex; flex-direction: column; }
         #login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; z-index: 9999; display: flex; align-items: center; justify-content: center; }
@@ -20,24 +18,22 @@
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
         .stat-card { background: #161b22; padding: 1.5rem; border: 1px solid #30363d; border-radius: 8px; text-align: center; }
         .stat-number { font-size: 2.5rem; font-weight: bold; color: #58a6ff; margin: 0.5rem 0; }
-        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content { display: none; }
         .tab-content.active { display: block; }
-        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        th { text-align: left; border-bottom: 1px solid #30363d; padding: 1rem; color: #8b949e; }
-        td { padding: 1rem; border-bottom: 1px solid #21262d; }
-        .progress-container { width: 100%; background-color: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
-        .progress-bar { width: 0%; height: 20px; background-color: #2ea043; border-radius: 10px; transition: width 0.5s; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .status-active { color: #2ea043; font-weight: bold; }
+        .status-blocked { color: #f85149; font-weight: bold; }
+        .progress-container { width: 100%; background: #30363d; border-radius: 10px; margin-top: 1rem; display:none; }
+        .progress-bar { width: 0%; height: 20px; background: #2ea043; border-radius: 10px; transition: width 0.3s; }
     </style>
 </head>
 <body>
 
     <div id="login-overlay">
-        <article style="background: #161b22; border: 1px solid #30363d; width: 400px; padding: 2rem;">
-            <h3 style="text-align: center; margin-bottom: 2rem;">SECURE ACCESS</h3>
+        <article style="background: #161b22; width: 400px; padding: 2rem;">
+            <h3 style="text-align: center;">SECURE ACCESS</h3>
             <form onsubmit="adminLogin(event)">
-                <input type="text" id="adminUser" placeholder="Enter Username" required autocomplete="off">
-                <input type="password" id="adminPass" placeholder="Enter Password" required autocomplete="off">
+                <input type="text" id="adminUser" placeholder="Username" required>
+                <input type="password" id="adminPass" placeholder="Password" required>
                 <button type="submit" class="contrast">Authenticate</button>
             </form>
         </article>
@@ -46,8 +42,6 @@
     <div id="adminPanel" class="admin-layout">
         <aside class="sidebar">
             <h4 style="color: white; padding-left: 1rem;">SOC Dashboard</h4>
-            <hr style="margin: 1rem 0; border-color: #30363d;">
-            
             <nav>
                 <a onclick="switchTab('dashboard')" id="nav-dashboard" class="active">📊 Overview</a>
                 <a onclick="switchTab('users')" id="nav-users">👥 User Management</a>
@@ -74,13 +68,9 @@
                 <div class="stats-grid">
                     <div class="stat-card"><div>Total Requests</div><div class="stat-number" id="totalReq">0</div></div>
                     <div class="stat-card"><div>Threats Blocked</div><div class="stat-number" id="blockedReq" style="color:#f85149">0</div></div>
-                    <div class="stat-card"><div>AI Confidence</div><div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div></div>
                 </div>
-                <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
-                    <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
-                        <strong>Real-Time Activity Stream</strong>
-                        <span style="color: #2ea043; font-size: 0.8rem;">● LIVE MODE</span>
-                    </header>
+                <article style="background: #161b22; padding: 0;">
+                    <header style="padding: 1rem;"><strong>Real-Time Activity Stream</strong></header>
                     <table role="grid"><tbody id="realtimeLogBody"></tbody></table>
                 </article>
             </div>
@@ -88,9 +78,7 @@
             <div id="tab-users" class="tab-content">
                 <h2>User Database & Credentials</h2>
                 <table role="grid">
-                    <thead>
-                        <tr><th>ID</th><th>Username</th><th>Password (Hash)</th><th>Address</th><th>Status</th></tr>
-                    </thead>
+                    <thead><tr><th>ID</th><th>User</th><th>Password (Hash)</th><th>Location</th><th>Action</th></tr></thead>
                     <tbody id="userTableBody"></tbody>
                 </table>
             </div>
@@ -98,29 +86,14 @@
             <div id="tab-logs" class="tab-content">
                 <h2>Security Incident Logs</h2>
                 <table role="grid">
-                    <thead><tr><th>Time</th><th>IP Address</th><th>Query / Payload</th><th>Threat Level</th><th>Action</th></tr></thead>
+                    <thead><tr><th>Time</th><th>IP</th><th>Payload</th><th>Status</th></tr></thead>
                     <tbody id="logBody"></tbody>
                 </table>
             </div>
 
             <div id="tab-ml" class="tab-content">
-                <h2>SQL Injection Detection Model (v2.1)</h2>
-                <div class="stats-grid">
-                    <div class="stat-card"><div>Training Samples</div><div class="stat-number" id="sampleCount">15,402</div></div>
-                    <div class="stat-card"><div style="color: #2ea043;">Precision</div><div class="stat-number">98.2%</div></div>
-                </div>
-                <article style="background: #161b22; border: 1px solid #30363d;">
-                    <header><strong>Add New Training Data</strong></header>
-                    <div class="grid">
-                        <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
-                        <select id="newLabel">
-                            <option value="1">Malicious (Attack)</option>
-                            <option value="0">Safe (Normal)</option>
-                        </select>
-                    </div>
-                    <button onclick="addNewData()" class="secondary outline">+ Add to Dataset</button>
-                </article>
-                <article style="background: #161b22; border: 1px solid #30363d;">
+                <h2>AI Model Training (v2.1)</h2>
+                <article>
                     <header><strong>Model Retraining</strong></header>
                     <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
                     <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
@@ -132,21 +105,18 @@
     <script>
         let totalRequests = 0;
         let blockedThreats = 0;
+        let isProtectionActive = localStorage.getItem('sqlProtectionState') === 'true';
 
-        // --- PERSISTENCE & INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            const savedState = localStorage.getItem('sqlProtectionState') === 'true';
-            updateToggleUI(savedState);
-
-            if (localStorage.getItem('adminSession') === 'active') {
-                showDashboard();
-            }
+            updateToggleUI(isProtectionActive);
+            if (localStorage.getItem('adminSession') === 'active') showDashboard();
         });
 
         function toggleProtection() {
             const checkbox = document.getElementById('protectionToggle');
-            localStorage.setItem('sqlProtectionState', checkbox.checked);
-            updateToggleUI(checkbox.checked);
+            isProtectionActive = checkbox.checked;
+            localStorage.setItem('sqlProtectionState', isProtectionActive);
+            updateToggleUI(isProtectionActive);
         }
 
         function updateToggleUI(isActive) {
@@ -159,40 +129,24 @@
             if (checkbox) checkbox.checked = isActive;
         }
 
-        // --- SECURITY ENGINE ---
-        function detectSQLi(query) {
-            const q = query.toLowerCase();
-            const patterns = [/' OR 1=1 --/i, /admin' --/i, /union select/i, /drop table/i];
-            const isMalicious = patterns.some(p => p.test(q));
-            return { isMalicious, confidence: isMalicious ? "99.8%" : "0%" };
-        }
-
         function adminLogin(e) {
             e.preventDefault();
             const u = document.getElementById('adminUser').value;
             const p = document.getElementById('adminPass').value;
-            const isProtectionActive = localStorage.getItem('sqlProtectionState') === 'true';
 
-            if (isProtectionActive) {
-                const analysis = detectSQLi(u + " " + p);
-                if (analysis.isMalicious) {
-                    logAttack(u, "BLOCKED");
-                    alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
-                    return;
-                }
+            if (isProtectionActive && (u.includes("'") || u.includes("--"))) {
+                logAttack(u, "BLOCKED");
+                alert("🚨 SQL PROTECTION ACTIVE: Attack Blocked!");
+                return;
             }
 
-            const isBypass = u.includes("' OR 1=1");
-            if ((u === 'admin' && p === 'admin123') || isBypass) {
-                if (isBypass) logAttack(u, "ALLOWED (Vulnerable)");
+            if ((u === 'admin' && p === 'admin123') || u.includes("' OR 1=1")) {
+                if (u.includes("' OR 1=1")) logAttack(u, "ALLOWED (Vulnerable)");
                 localStorage.setItem('adminSession', 'active');
                 showDashboard();
-            } else {
-                alert("❌ ACCESS DENIED: Invalid Credentials");
-            }
+            } else { alert("ACCESS DENIED"); }
         }
 
-        // --- LOGGING & DASHBOARD LOGIC ---
         function logAttack(query, status) {
             const attack = { time: new Date().toLocaleTimeString(), ip: "192.168.1.105", query, status };
             let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
@@ -208,11 +162,16 @@
         }
 
         function loadUsers() {
-            document.getElementById('userTableBody').innerHTML = `
-                <tr><td>#100</td><td>admin</td><td>$2b$12$K9R...</td><td>System Admin</td><td style="color:#2ea043">Active</td></tr>
-                <tr><td>#201</td><td>mounika</td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td style="color:#2ea043">Active</td></tr>
-                <tr><td>#666</td><td>hacker_unknown</td><td>plaintext_123</td><td>Unknown IP</td><td style="color:orange">Suspicious</td></tr>
-            `;
+            const tbody = document.getElementById('userTableBody');
+            const users = [
+                { id: 100, user: "admin", pass: "$2b$12$K9R...", loc: "System Admin", role: "admin" },
+                { id: 201, user: "mounika", pass: "$2b$10$e9x...", loc: "Hyderabad, India", role: "user" }
+            ];
+            tbody.innerHTML = users.map(u => `
+                <tr>
+                    <td>#${u.id}</td><td><strong>${u.user}</strong></td><td><code>${u.pass}</code></td><td>${u.loc}</td>
+                    <td>${u.role === 'admin' ? '<em>Protected</em>' : '<button class="outline" onclick="this.innerText=\'Blocked\'; this.style.color=\'red\'">Block Access</button>'}</td>
+                </tr>`).join('');
         }
 
         function startSimulation() {
@@ -224,18 +183,14 @@
                     localStorage.setItem('simulatedAttacks', JSON.stringify(attacks));
                     if (a.status === "BLOCKED") blockedThreats++;
                     totalRequests++;
-                    document.getElementById('totalReq').innerText = totalRequests;
-                    document.getElementById('blockedReq').innerText = blockedThreats;
-                } else {
-                    totalRequests += Math.floor(Math.random() * 2);
-                    document.getElementById('totalReq').innerText = totalRequests;
-                }
-            }, 1500);
+                } else { totalRequests += Math.floor(Math.random() * 2); }
+                document.getElementById('totalReq').innerText = totalRequests;
+                document.getElementById('blockedReq').innerText = blockedThreats;
+            }, 1000);
         }
 
         function addLogToUI(a) {
-            const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
-            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td style="font-family:monospace">${a.query}</td><td>CRITICAL</td><td style="color:${statusColor}; font-weight:bold">${a.status}</td></tr>`;
+            const row = `<tr><td>${a.time}</td><td>${a.ip}</td><td><code>${a.query}</code></td><td style="color:${a.status==='BLOCKED'?'#f85149':'#2ea043'}">${a.status}</td></tr>`;
             document.getElementById('realtimeLogBody').insertAdjacentHTML('afterbegin', row);
             document.getElementById('logBody').insertAdjacentHTML('afterbegin', row);
         }
@@ -247,25 +202,16 @@
             document.getElementById('nav-' + t).classList.add('active');
         }
 
-        function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
-
-        // --- ML TRAINING LOGIC ---
-        function addNewData() { alert("✅ Data added to training set. Don't forget to Retrain!"); }
         function trainModel() {
-            const btn = document.getElementById('trainBtn');
-            const bar = document.getElementById('progressBar');
             document.getElementById('progressContainer').style.display = 'block';
-            btn.disabled = true;
             let w = 0;
             const i = setInterval(() => {
-                if (w >= 100) { 
-                    clearInterval(i); 
-                    alert("✅ AI Model successfully retrained."); 
-                    document.getElementById('progressContainer').style.display = 'none';
-                    btn.disabled = false;
-                } else { w++; bar.style.width = w + '%'; }
-            }, 30);
+                if (w >= 100) { clearInterval(i); alert("Model Retrained!"); }
+                else { w += 5; document.getElementById('progressBar').style.width = w + '%'; }
+            }, 100);
         }
+
+        function adminLogout() { localStorage.removeItem('adminSession'); window.location.reload(); }
     </script>
 </body>
 </html>
