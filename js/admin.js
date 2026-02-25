@@ -132,5 +132,33 @@ function loadUsers() {
         <tr><td>#201</td><td><strong>mounika</strong></td><td>$2b$10$e9x...</td><td>Hyderabad, India</td><td><button class="outline" onclick="this.innerText='Blocked'">Block Access</button></td></tr>
     `;
 }
+function addNewData() {
+    const queryInput = document.getElementById('newQuery');
+    const labelSelect = document.getElementById('newLabel');
+    const table = document.getElementById('mlTableBody');
+    const countDisplay = document.getElementById('sampleCount');
 
+    if(queryInput.value === "") {
+        alert("Please enter a query pattern.");
+        return;
+    }
+
+    const isAttack = labelSelect.value === "1";
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${isAttack ? "Attack" : "Normal"}</td>
+        <td style="font-family:monospace">${queryInput.value}</td>
+        <td style="color:${isAttack ? "#f85149" : "#2ea043"}">${isAttack ? "Malicious (1)" : "Safe (0)"}</td>
+    `;
+    
+    // Add to the top of the dataset table
+    table.prepend(row);
+
+    // Update the counter
+    let currentCount = parseInt(countDisplay.innerText.replace(/,/g, ''));
+    countDisplay.innerText = (currentCount + 1).toLocaleString();
+
+    queryInput.value = "";
+    alert("✅ Data added. Re-run training to update the ML brain.");
+}
 // ... Keep your initLiveChart and initThreatChart functions as they are ...
