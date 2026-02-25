@@ -89,23 +89,52 @@ function logAttackToStorage(query, status) {
 
 function startSimulation() {
     setInterval(() => {
-        let realAttacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+        // 1. PULL ATTACKS FROM STORAGE
+        let attacks = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
         
-        if (realAttacks.length > 0) {
-            const attack = realAttacks.shift(); 
-            addLogEntry(attack.time, attack.ip, attack.query, attack.status);
-            localStorage.setItem('simulatedAttacks', JSON.stringify(realAttacks));
-            if (attack.status === "BLOCKED") blockedThreats++;
+        if (attacks.length > 0) {
+            // Take the first attack in the queue
+            const a = attacks.shift(); 
+            
+            // 2. LOG TO THE TABLES
+            addLogToUI(a);
+            
+            // 3. UPDATE GLOBAL COUNTERS
+            if (a.status === "BLOCKED") {
+                blockedThreats++;
+            }
+            totalRequests++;
+            
+            // Update the UI numbers
+            document.getElementById('totalReq').innerText = totalRequests;
+            document.getElementById('blockedReq').innerText = blockedThreats;
+
+            // 4. SAVE REMAINING QUEUE BACK TO STORAGE
+            localStorage.setItem('simulatedAttacks', JSON.stringify(attacks));
         } else {
-            const isAttack = Math.random() < 0.2;
-            const queryList = isAttack ? attackQueries : safeQueries;
-            const query = queryList[Math.floor(Math.random() * queryList.length)];
-            addLogEntry(new Date().toLocaleTimeString(), "192.168.1." + Math.floor(Math.random()*255), query, isAttack ? "BLOCKED" : "ALLOWED");
-            if (isAttack) blockedThreats++;
+            // Random background traffic if no real attacks are pending
+            totalRequests += Math.floor(Math.random() * 2);
+            document.getElementById('totalReq').innerText = totalRequests;
         }
-        totalRequests++;
-        updateStats();
-    }, 1500);
+    }, 1000); // Checks every second
+}
+
+function addLogToUI(a) {
+    const statusColor = a.status.includes('BLOCKED') ? '#f85149' : '#2ea043';
+    const row = `
+        <tr>
+            <td>${a.time}</td>
+            <td>${a.ip}</td>
+            <td><code>${a.query}</code></td>
+            <td style="color:${statusColor}; font-weight:bold">${a.status}</td>
+        </tr>`;
+
+    // Insert into BOTH the Dashboard Stream and the Attack Logs Tab
+    const realtimeBody = document.getElementById('realtimeLogBody');
+    const logsTabBody = document.getElementById('logBody');
+
+    if (realtimeBody) realtimeBody.insertAdjacentHTML('afterbegin', row);
+    if (logsTabBody) logsTabBody.insertAdjacentHTML('afterbegin', row);
 }
 
 function addLogEntry(time, ip, query, status) {
