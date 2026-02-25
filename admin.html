@@ -1,45 +1,46 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOC Admin Panel</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOC Admin Panel</title>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-    <link rel="stylesheet" href="css/admin.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+<link rel="stylesheet" href="css/admin.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<!-- ================= LOGIN SCREEN ================= -->
-<div id="login-overlay">
-    <article class="login-box">
+<!-- LOGIN OVERLAY -->
+<div id="loginOverlay" class="overlay">
+    <div class="login-card">
         <h3>SECURE ACCESS</h3>
-        <form id="loginForm">
+        <form id="adminLoginForm">
             <input type="text" id="adminUser" placeholder="Username" required>
             <input type="password" id="adminPass" placeholder="Password" required>
             <button type="submit" class="contrast">Authenticate</button>
         </form>
-    </article>
+    </div>
 </div>
 
-<!-- ================= ADMIN DASHBOARD ================= -->
+<!-- ADMIN PANEL -->
 <div id="adminPanel" class="admin-layout hidden">
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
         <h4>SOC Dashboard</h4>
+
         <nav>
-            <a data-tab="dashboard" class="active">📊 Overview</a>
+            <a data-tab="overview" class="active">📊 Overview</a>
             <a data-tab="users">👥 User Management</a>
             <a data-tab="logs">📜 Attack Logs</a>
             <a data-tab="ai">🤖 AI Training</a>
         </nav>
 
-        <div class="toggle-area">
+        <div class="toggle-box">
             <label>
-                <input type="checkbox" id="protectionToggle">
-                <span id="protectionLabel">SQL PROTECTION: OFF</span>
+                <input type="checkbox" id="sqlToggle">
+                <span id="toggleLabel">SQL PROTECTION: OFF</span>
             </label>
         </div>
 
@@ -52,18 +53,18 @@
     <!-- MAIN CONTENT -->
     <main class="content">
 
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="tab active">
+        <!-- OVERVIEW -->
+        <section id="overview" class="tab active">
             <h2>Live Threat Monitoring</h2>
 
             <div class="stats">
                 <div class="card">
                     <h4>Total Requests</h4>
-                    <p id="totalReq">0</p>
+                    <p id="totalRequests">0</p>
                 </div>
                 <div class="card">
                     <h4>Threats Blocked</h4>
-                    <p id="blockedReq">0</p>
+                    <p id="blockedRequests">0</p>
                 </div>
             </div>
 
@@ -78,7 +79,7 @@
                             <th>Status</th>
                         </tr>
                     </thead>
-                    <tbody id="realtimeLog"></tbody>
+                    <tbody id="liveTable"></tbody>
                 </table>
             </div>
 
