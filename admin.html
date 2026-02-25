@@ -132,13 +132,56 @@
         </div>
 
         <div id="tab-ml" class="tab-content">
-            <h2>SQL Injection Detection Model (v2.1)</h2>
-            <article>
-                <header><strong>Model Retraining</strong></header>
-                <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
-                <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
-            </article>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>SQL Injection Detection Model (v2.1)</h2>
+        <div class="status-badge" style="background:#a371f7; padding: 2px 10px; border-radius: 20px;">● Active</div>
+    </div>
+
+    <div class="stats-grid" style="margin-top: 2rem;">
+        <div class="stat-card">
+            <div style="color: #8b949e;">Training Samples</div>
+            <div class="stat-number" id="sampleCount">15,402</div>
         </div>
+        <div class="stat-card">
+            <div style="color: #2ea043;">Precision</div>
+            <div class="stat-number">98.2%</div>
+        </div>
+    </div>
+
+    <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
+        <header><strong>Add New Training Data</strong></header>
+        <div class="grid">
+            <div>
+                <label>Attack / Query Pattern</label>
+                <input type="text" id="newQuery" placeholder="e.g. ' OR 1=1 --">
+            </div>
+            <div>
+                <label>Classification</label>
+                <select id="newLabel">
+                    <option value="1">Malicious (Attack)</option>
+                    <option value="0">Safe (Normal)</option>
+                </select>
+            </div>
+        </div>
+        <button onclick="addNewData()" class="secondary outline">+ Add to Dataset</button>
+    </article>
+
+    <h4 style="margin-top: 2rem;">Training Dataset (Preview)</h4>
+    <table role="grid">
+        <thead><tr><th>Type</th><th>SQL Query Sample</th><th>Label</th></tr></thead>
+        <tbody id="mlTableBody">
+            <tr><td>Normal</td><td style="font-family:monospace">SELECT * FROM users WHERE id = 5</td><td style="color:#2ea043">Safe (0)</td></tr>
+            <tr><td>Attack</td><td style="font-family:monospace">' OR 1=1 --</td><td style="color:#f85149">Malicious (1)</td></tr>
+            <tr><td>Attack</td><td style="font-family:monospace">UNION SELECT user, pass FROM admins</td><td style="color:#f85149">Malicious (1)</td></tr>
+        </tbody>
+    </table>
+
+    <article style="background: #161b22; margin-top: 2rem; border: 1px solid #30363d;">
+        <header><strong>Model Retraining</strong></header>
+        <button onclick="trainModel()" class="contrast" id="trainBtn">Start Training</button>
+        <div class="progress-container" id="progressContainer"><div class="progress-bar" id="progressBar"></div></div>
+    </article>
+</div>
     </main>
   </div>
 
