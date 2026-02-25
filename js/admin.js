@@ -286,3 +286,66 @@ function addRealtimeLog(time, ip, type, query, confidence, status) {
     // 3. Update the Line Chart
     updateChart(time, status === "BLOCKED");
 }
+// Global state
+let isProtectionActive = false;
+
+function toggleProtection() {
+    const checkbox = document.getElementById('protectionToggle');
+    const label = document.getElementById('protectionLabel');
+    
+    isProtectionActive = checkbox.checked;
+    
+    if (isProtectionActive) {
+        label.innerText = "AI PROTECTION: ON";
+        label.style.color = "#2ea043";
+    } else {
+        label.innerText = "AI PROTECTION: OFF";
+        label.style.color = "#f85149";
+    }
+}
+
+function adminLogin(e) {
+    e.preventDefault();
+    const u = document.getElementById('adminUser').value;
+    const p = document.getElementById('adminPass').value;
+
+    // --- DETECTION LOGIC ---
+    if (isProtectionActive) {
+        const analysis = detectSQLi(u + " " + p);
+        if (analysis.isMalicious) {
+            // Log the blocked attack
+            logAttackToStorage(u, "BLOCKED", analysis.confidence);
+            alert("🚨 AI SHIELD: SQL Injection Detected and Blocked!");
+            return; // STOP the login
+        }
+    }
+
+    // --- BYPASS LOGIC (For Demo) ---
+    const isBypass = u.includes("' OR 1=1");
+    
+    if (u === 'admin' && p === 'admin123' || isBypass) {
+        if (isBypass) {
+            // Log the successful attack (even if allowed)
+            logAttackToStorage(u, "ALLOWED (Vulnerable)", "0%");
+        }
+        localStorage.setItem('adminSession', 'active');
+        showDashboard();
+    } else {
+        alert("❌ ACCESS DENIED");
+    }
+}
+
+// Helper to save attack to local storage for the logs tab
+function logAttackToStorage(query, status, confidence) {
+    const attackEvent = {
+        time: new Date().toLocaleTimeString(),
+        ip: "192.168.1.105",
+        query: query,
+        type: "SQL Injection",
+        confidence: confidence,
+        status: status
+    };
+    let logs = JSON.parse(localStorage.getItem('simulatedAttacks')) || [];
+    logs.push(attackEvent);
+    localStorage.setItem('simulatedAttacks', JSON.stringify(logs));
+}
