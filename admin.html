@@ -83,48 +83,47 @@
         </div>
     </aside>
 
-    <main class="content">
+ <main class="content">
         
-       <div id="tab-dashboard" class="tab-content active">
-    <h2>Live Threat Monitoring</h2>
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div style="color: #8b949e;">Total Requests</div>
-            <div class="stat-number" id="totalReq">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #f85149;">Threats Blocked</div>
-            <div class="stat-number" id="blockedReq">0</div>
-        </div>
-        <div class="stat-card">
-            <div style="color: #2ea043;">AI Confidence</div>
-            <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
-        </div>
-    </div>
+        <div id="tab-dashboard" class="tab-content active">
+            <h2>Live Threat Monitoring</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div style="color: #8b949e;">Total Requests</div>
+                    <div class="stat-number" id="totalReq">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #f85149;">Threats Blocked</div>
+                    <div class="stat-number" id="blockedReq">0</div>
+                </div>
+                <div class="stat-card">
+                    <div style="color: #2ea043;">AI Confidence</div>
+                    <div class="stat-number" style="font-size: 1.5rem; margin-top: 1rem;">99.4%</div>
+                </div>
+            </div>
 
-    <article style="background: #161b22; border: 1px solid #30363d; padding: 0;">
-        <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
-            <strong>Real-Time Activity Stream</strong>
-            <span class="status-active" style="font-size: 0.8rem;">● LIVE MODE</span>
-        </header>
-        <div style="max-height: 400px; overflow-y: auto;">
-            <table role="grid" style="margin-top: 0;">
-                <thead>
-                    <tr>
-                        <th>Timestamp</th>
-                        <th>Source IP</th>
-                        <th>Event Type</th>
-                        <th>Target</th>
-                        <th>Confidence</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody id="realtimeLogBody">
-                    </tbody>
-            </table>
-        </div>
-    </article>
-</div>
+            <article style="background: #161b22; border: 1px solid #30363d; padding: 0; margin-bottom: 2rem;">
+                <header style="padding: 1rem; border-bottom: 1px solid #30363d; display: flex; justify-content: space-between;">
+                    <strong>Real-Time Activity Stream</strong>
+                    <span class="status-active" style="font-size: 0.8rem;">● LIVE MODE</span>
+                </header>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table role="grid" style="margin-top: 0;">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Source IP</th>
+                                <th>Event Type</th>
+                                <th>Target</th>
+                                <th>Confidence</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="realtimeLogBody"></tbody>
+                    </table>
+                </div>
+            </article>
+
             <div style="height: 300px; background: #161b22; padding: 1rem; border-radius: 8px;">
                 <canvas id="trafficChart"></canvas>
             </div>
@@ -153,7 +152,7 @@
         <div id="tab-ml" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <h2>SQL Injection Detection Model (v2.1)</h2>
-                <div class="status-badge" style="background:#a371f7">● Active</div>
+                <div class="status-badge" style="background:#a371f7; padding: 2px 10px; border-radius: 20px;">● Active</div>
             </div>
 
             <div class="stats-grid" style="margin-top: 2rem;">
